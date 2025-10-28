@@ -1,12 +1,12 @@
-#!/bin/sh
+#!/bin/sh -x
 if test ! "x$(which libtoolize)" = "x"; then
   echo "Running libtoolize"
-  libtoolize --copy --force --automake
+  libtoolize --copy
 else
   if test ! "x$(which gintltoolize)" = "x"; then
     echo "Running glibtoolize"
-    glibtoolize --copy --force --automake
+    glibtoolize --copy
   fi
 fi
-autoreconf --install --force --verbose
+exec autoreconf --install --verbose
 

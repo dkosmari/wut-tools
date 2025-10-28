@@ -16,20 +16,23 @@ sudo dkp-pacman -Syu wut-tools
 ## Building
 
 ### Dependencies
-- autoconf
-- libtool
-- libz-dev
-- pkg-config
 
-### Building
+- autoconf
+- automake
+- libtool
+- libz-dev (zlib)
+- pkg-config
+- libfreeimage-dev
+
+### Steps
 
 For development purposes you may want to build this from source and replace your existing wut-tools installation:
 
-```
-dkp-pacman -R wut-tools
-./autogen.sh
-mkdir build
-cd build
-../configure --prefix=$DEVKITPRO/tools
-make install
-```
+    dkp-pacman -R wut-tools
+    ./bootstrap
+    mkdir build
+    cd build
+    ../configure --prefix=$DEVKITPRO/tools
+    make
+    sudo make install
+
