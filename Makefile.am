@@ -2,7 +2,11 @@
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/src/common \
-	-I$(srcdir)/libraries/excmd/src
+	-I$(srcdir)/libraries/excmd/src \
+	-I$(srcdir)/libraries/fmt/include
+
+
+LDADD = libfmt.la
 
 
 if PLATFORM_MINGW
@@ -11,13 +15,18 @@ endif PLATFORM_MINGW
 
 
 if PLATFORM_APPLE
-LDADD = -lc++
+LDADD += -lc++
 endif
 
+common_headers = \
+	src/common/be_val.h		\
+	src/common/elf.h		\
+	src/common/rplwrap.h		\
+	src/common/type_traits.h	\
+	src/common/utils.h
 
-fmt_CPPFLAGS = -I$(srcdir)/libraries/fmt/include
 
-excmd_files = \
+excmd_headers = \
 	libraries/excmd/src/excmd_exception.h	\
 	libraries/excmd/src/excmd.h		\
 	libraries/excmd/src/excmd_meta.h	\
@@ -38,36 +47,41 @@ noinst_LTLIBRARIES = libfmt.la
 
 
 libfmt_la_SOURCES = \
+	libraries/fmt/include/fmt/args.h	\
+	libraries/fmt/include/fmt/base.h	\
+	libraries/fmt/include/fmt/chrono.h	\
+	libraries/fmt/include/fmt/color.h	\
+	libraries/fmt/include/fmt/compile.h	\
 	libraries/fmt/include/fmt/core.h	\
 	libraries/fmt/include/fmt/format.h	\
-	libraries/fmt/include/fmt/format-inl.h  \
+	libraries/fmt/include/fmt/format-inl.h	\
+	libraries/fmt/include/fmt/os.h		\
 	libraries/fmt/include/fmt/ostream.h	\
-	libraries/fmt/include/fmt/posix.h	\
 	libraries/fmt/include/fmt/printf.h	\
 	libraries/fmt/include/fmt/ranges.h	\
-	libraries/fmt/include/fmt/time.h	\
+	libraries/fmt/include/fmt/std.h		\
+	libraries/fmt/include/fmt/xchar.h	\
 	libraries/fmt/src/format.cc		\
-	libraries/fmt/src/posix.cc
-
-libfmt_la_CPPFLAGS= $(fmt_CPPFLAGS)
+	libraries/fmt/src/os.cc
 
 
 elf2rpl_SOURCES	= \
-	$(excmd_files)	\
+	$(common_headers)	\
+	$(excmd_headers)	\
 	src/elf2rpl/main.cpp
 
 elf2rpl_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
-	$(ZLIB_CFLAGS) \
-	$(fmt_CPPFLAGS)
+	$(ZLIB_CFLAGS)
 
 elf2rpl_LDADD = \
-	libfmt.la \
 	$(ZLIB_LIBS) \
 	$(LDADD)
 
 
 readrpl_SOURCES = \
+	$(common_headers)			\
+	$(excmd_headers)			\
 	src/readrpl/generate_exports_def.cpp	\
 	src/readrpl/generate_exports_def.h	\
 	src/readrpl/main.cpp			\
@@ -77,32 +91,27 @@ readrpl_SOURCES = \
 	src/readrpl/verify.cpp			\
 	src/readrpl/verify.h
 
-readrpl_CPPFLAGS = \
-	$(AM_CPPFLAGS) \
-	$(fmt_CPPFLAGS)
 
 readrpl_LDADD = \
-	libfmt.la \
 	$(ZLIB_LIBS) \
 	$(LDADD)
 
 
-rplexportgen_SOURCES = src/rplexportgen/rplexportgen.cpp
-
-rplexportgen_CPPFLAGS = \
-	$(AM_CPPFLAGS) \
-	$(fmt_CPPFLAGS)
+rplexportgen_SOURCES = \
+	$(common_headers)			\
+	src/rplexportgen/rplexportgen.cpp
 
 rplexportgen_LDADD = \
 	$(ZLIB_LIBS) \
 	$(LDADD)
 
 
-rplimportgen_SOURCES = src/rplimportgen/rplimportgen.cpp
+rplimportgen_SOURCES = \
+	$(common_headers)			\
+	src/rplimportgen/rplimportgen.cpp
 
 rplimportgen_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
-	$(fmt_CPPFLAGS) \
 	$(ZLIB_CFLAGS)
 
 rplimportgen_LDADD = \
@@ -111,7 +120,7 @@ rplimportgen_LDADD = \
 
 
 wuhbtool_SOURCES = \
-	$(excmd_files)					\
+	$(excmd_headers)				\
 	src/wuhbtool/entities/BufferFileEntry.cpp	\
 	src/wuhbtool/entities/BufferFileEntry.h		\
 	src/wuhbtool/entities/DirectoryEntry.cpp	\
@@ -148,18 +157,11 @@ wuhbtool_LDADD = \
 
 udplogserver_SOURCES = src/udplogserver/main.cpp
 
-udplogserver_LDADD = $(LDADD)
-
 if PLATFORM_MINGW
-udplogserver_LDADD += -lws2_32
+udplogserver_LDADD = $(LDADD) -lws2_32
 endif PLATFORM_MINGW
 
 
 EXTRA_DIST = \
-	bootstrap			\
-	LICENSE.md			\
-	src/common/be_val.h		\
-	src/common/elf.h		\
-	src/common/rplwrap.h		\
-	src/common/type_traits.h	\
-	src/common/utils.h
+	bootstrap \
+	LICENSE.md

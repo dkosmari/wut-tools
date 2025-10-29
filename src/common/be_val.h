@@ -2,6 +2,8 @@
 #include "utils.h"
 #include "type_traits.h"
 #include <utility>
+#include <ostream>
+#include <fmt/ostream.h>
 
 template<typename Type>
 class be_val
@@ -370,3 +372,14 @@ public:
 private:
    value_type mStorage;
 };
+
+template<typename Type>
+std::ostream&
+operator <<(std::ostream& out,
+            const be_val<Type>& val)
+{
+   return out << val.value();
+}
+
+template<typename Type>
+struct fmt::formatter<be_val<Type>> : fmt::ostream_formatter {};

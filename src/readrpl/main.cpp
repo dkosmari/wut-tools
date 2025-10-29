@@ -3,12 +3,27 @@
 #include "print.h"
 #include "verify.h"
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <excmd.h>
-#include <fmt/format.h>
+#include <fmt/base.h>
 #include <fstream>
 #include <iostream>
 #include <vector>
 #include <zlib.h>
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
+enum ErrorCodes {
+   ERROR_BAD_ARGUMENTS = 1,
+   ERROR_OPEN_INPUT    = 2,
+   ERROR_BAD_INPUT     = 3,
+   ERROR_OPEN_OUTPUT   = 4,
+};
 
 static std::string
 getFileBasename(std::string path)
@@ -66,7 +81,7 @@ readSection(std::ifstream &fh,
       ret = inflateInit(&stream);
 
       if (ret != Z_OK) {
-         fmt::print("Couldn't decompress .rpx section because inflateInit returned {}\n", ret);
+         fmt::print(cerr, "Couldn't decompress .rpx section because inflateInit returned {}\n", ret);
          section.data.clear();
          return false;
       } else {
@@ -82,7 +97,7 @@ readSection(std::ifstream &fh,
          ret = inflate(&stream, Z_FINISH);
 
          if (ret != Z_OK && ret != Z_STREAM_END) {
-            fmt::print("Couldn't decompress .rpx section because inflate returned {}\n", ret);
+            fmt::print(cerr, "Couldn't decompress .rpx section because inflate returned {}\n", ret);
             section.data.clear();
             return false;
          }
@@ -98,6 +113,16 @@ readSection(std::ifstream &fh,
    return true;
 }
 
+static void
+show_help(std::ostream& out,
+          const excmd::parser& parser,
+          const std::string& exec_name)
+{
+   fmt::print(out, "{} [options] path\n", exec_name);
+   fmt::print(out, "{}\n", parser.format_help(exec_name));
+   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+}
+
 int main(int argc, char **argv)
 {
    excmd::parser parser;
@@ -108,7 +133,9 @@ int main(int argc, char **argv)
    try {
       parser.global_options()
          .add_option("H,help",
-                     description { "Show help." })
+                     description { "Show help" })
+         .add_option("v,version",
+                     description { "Show version" })
          .add_option("a,all",
                      description { "Equivalent to: -h -S -s -r -i -x -c -f" })
          .add_option("h,file-header",
@@ -137,15 +164,31 @@ int main(int argc, char **argv)
                        value<std::string> {});
 
       options = parser.parse(argc, argv);
-   } catch (excmd::exception ex) {
-      std::cout << "Error parsing options: " << ex.what() << std::endl;
-      return -1;
+   } catch (std::exception& ex) {
+      cerr << "Error parsing options: " << ex.what() << endl;
+      return ERROR_BAD_ARGUMENTS;
    }
 
-   if (options.empty() || options.has("help") || !options.has("path")) {
-      fmt::print("{} <options> path\n", argv[0]);
-      fmt::print("{}\n", parser.format_help(argv[0]));
+   if (options.has("help")) {
+      show_help(cout, parser, argv[0]);
       return 0;
+   }
+
+   if (options.has("version")) {
+      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      return 0;
+   }
+
+   if (options.empty()) {
+      cerr << "No option provided.\n";
+      show_help(cerr, parser, argv[0]);
+      return ERROR_BAD_ARGUMENTS;
+   }
+
+   if (!options.has("path")) {
+      cerr << "Error: path argument is mandatory.\n";
+      show_help(cerr, parser, argv[0]);
+      return ERROR_BAD_ARGUMENTS;
    }
 
    auto all = options.has("all");
@@ -170,16 +213,16 @@ int main(int argc, char **argv)
    // Read file
    std::ifstream fh { path, std::ifstream::binary };
    if (!fh.is_open()) {
-      fmt::print("Could not open {} for reading\n", path);
-      return -1;
+       fmt::print(cerr, "Could not open {} for reading\n", path);
+      return ERROR_OPEN_INPUT;
    }
 
    Rpl rpl;
    fh.read(reinterpret_cast<char*>(&rpl.header), sizeof(elf::Header));
 
    if (rpl.header.magic != elf::HeaderMagic) {
-      fmt::print("Invalid ELF magic header\n");
-      return -1;
+      cerr << "Invalid ELF magic header\n";
+      return ERROR_BAD_INPUT;
    }
 
    // Read sections
@@ -189,7 +232,7 @@ int main(int argc, char **argv)
 
       if (!readSection(fh, section, i)) {
          fmt::print("Error reading section {}", i);
-         return -1;
+         return ERROR_BAD_INPUT;
       }
 
       rpl.sections.push_back(section);
@@ -290,9 +333,7 @@ int main(int argc, char **argv)
    if (options.has("exports-def")) {
       auto output = options.get<std::string>("exports-def");
       if (!generateExportsDef(rpl, getFileBasename(path), output)) {
-         return -1;
+         return ERROR_OPEN_OUTPUT;
       }
    }
-
-   return 0;
 }

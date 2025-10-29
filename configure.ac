@@ -10,7 +10,7 @@ AC_INIT([WUT Tools],
 AC_CONFIG_SRCDIR([src/elf2rpl/main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 AC_CANONICAL_HOST
 
@@ -29,7 +29,7 @@ AC_SYS_LARGEFILE
 
 AC_LANG([C++])
 AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
-
+dnl AX_APPEND_COMPILE_FLAGS([-fmodules-ts], [CXXFLAGS])
 
 PKG_CHECK_MODULES([ZLIB], [zlib])
 

@@ -9,11 +9,30 @@
 #include <unistd.h>
 #endif
 
-#include <iostream>
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <string_view>
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #define SERVER_PORT 4405
+
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::flush;
+
+volatile std::sig_atomic_t interrupted;
+
+extern "C"
+void handle_ctrl_c(int)
+{
+   interrupted = 1;
+}
 
 int main(int argc, char **argv)
 {
@@ -27,6 +46,7 @@ int main(int argc, char **argv)
 #ifdef _WIN32
    WSADATA wsaData;
    if (WSAStartup(MAKEWORD(2, 2), &wsaData) == SOCKET_ERROR) {
+      cerr << "WSAStartup() failed" << endl;
       return -1;
    }
 #endif
@@ -39,6 +59,7 @@ int main(int argc, char **argv)
 #else
    if (fd < 0) {
 #endif
+      cerr << "Failed to create socket" << endl;
       return -1;
    }
 
@@ -63,6 +84,7 @@ int main(int argc, char **argv)
 #else
       close(fd);
 #endif
+      cerr << "Failed to bind socket" << endl;
       return -1;
    }
 
@@ -70,7 +92,10 @@ int main(int argc, char **argv)
    char buffer[2048];
    bool running = true;
 
+   std::signal(SIGINT, handle_ctrl_c);
+
    while (running) {
+
       fd_set fdsRead;
       FD_ZERO(&fdsRead);
       FD_SET(fd, &fdsRead);
@@ -86,13 +111,21 @@ int main(int argc, char **argv)
 #else
          socklen_t fromLen = sizeof(from);
 #endif
-         int recvd = recvfrom(fd, buffer, sizeof(buffer), 0, (struct sockaddr *) &from, &fromLen);
+         int recvd = recvfrom(fd,
+                              buffer,
+                              sizeof(buffer),
+                              0,
+                              reinterpret_cast<struct sockaddr *>(&from),
+                              &fromLen);
 
-         if (recvd > 0) {
-            buffer[recvd] = 0;
-            std::cout << buffer;
-            std::cout.flush();
-         }
+         if (recvd > 0)
+            cout << std::string_view{buffer, static_cast<std::size_t>(recvd)} << flush;
+
+      }
+
+      if (interrupted) {
+         cerr << "\nInterrupted." << endl;
+         running = false;
       }
    }
 

@@ -1,18 +1,29 @@
 #include "utils.h"
 #include "rplwrap.h"
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cctype>
-#include <cstring>
 #include <cstdint>
-#include <iostream>
-#include <functional>
+#include <cstring>
+#include <excmd.h>
+#include <fmt/base.h>
+#include <fmt/ostream.h>
 #include <fstream>
+#include <functional>
+#include <iostream>
 #include <locale>
-#include <vector>
 #include <string>
+#include <vector>
 #include <zlib.h>
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 enum class ReadMode
 {
@@ -30,20 +41,18 @@ writeExports(std::ofstream &out,
              const std::vector<std::string> &exports)
 {
    if (isData) {
-      out << ".section .dimport_" << moduleName << ", \"a\", @0x80000002" << std::endl;
+      out << ".section .dimport_" << moduleName << ", \"a\", @0x80000002\n";
    } else {
-      out << ".section .fimport_" << moduleName << ", \"ax\", @0x80000002" << std::endl;
+      out << ".section .fimport_" << moduleName << ", \"ax\", @0x80000002\n";
    }
 
-   out << ".align 4" << std::endl;
-   out << std::endl;
+   out << ".align 4\n\n";
 
    // Usually the symbol count, but isn't checked on hardware.
    // Spoofed to allow ld to garbage-collect later.
-   out << ".long 1" << std::endl;
+   out << ".long 1\n";
    // Supposed to be a crc32 of the imports. Again, not actually checked.
-   out << ".long 0x00000000" << std::endl;
-   out << std::endl;
+   out << ".long 0x00000000\n\n";
 
    // Align module name up to 8 bytes
    auto moduleNameSize = (moduleName.length() + 1 + 7) & ~7;
@@ -55,9 +64,9 @@ writeExports(std::ofstream &out,
 
    // Add name data
    for (uint32_t data : secData) {
-      out << ".long 0x" << std::hex << byte_swap(data) << std::endl;
+      out << ".long 0x" << std::hex << byte_swap(data) << '\n';
    }
-   out << std::endl;
+   out << '\n';
 
    const char *type = isData ? "@object" : "@function";
 
@@ -65,17 +74,16 @@ writeExports(std::ofstream &out,
       if (i < exports.size()) {
          // Basically do -ffunction-sections
          if (isData) {
-            out << ".section .dimport_" << moduleName << "." << exports[i] << ", \"a\", @0x80000002" << std::endl;
+            out << ".section .dimport_" << moduleName << "." << exports[i] << ", \"a\", @0x80000002\n";
          } else {
-            out << ".section .fimport_" << moduleName << "." << exports[i] << ", \"ax\", @0x80000002" << std::endl;
+            out << ".section .fimport_" << moduleName << "." << exports[i] << ", \"ax\", @0x80000002\n";
          }
-         out << ".global " << exports[i] << std::endl;
-         out << ".type " << exports[i] << ", " << type << std::endl;
-         out << exports[i] << ":" << std::endl;
+         out << ".global " << exports[i] << '\n';
+         out << ".type " << exports[i] << ", " << type << '\n';
+         out << exports[i] << ":\n";
       }
-      out << ".long 0x0" << std::endl;
-      out << ".long 0x0" << std::endl;
-      out << std::endl;
+      out << ".long 0x0\n";
+      out << ".long 0x0\n\n";
    }
 }
 
@@ -83,17 +91,27 @@ static void
 writeLinkerScript(std::ofstream &out,
                   const std::string &name)
 {
-   out << "SECTIONS" << std::endl;
-   out << "{" << std::endl;
-   out << "   .fimport_" << name << " ALIGN(16) : {" << std::endl;
-   out << "      KEEP ( *(.fimport_"  << name << ") )" << std::endl;
-   out << "      *(.fimport_"  << name << ".*)" << std::endl;
-   out << "   } > loadmem" << std::endl;
-   out << "   .dimport_"  << name << " ALIGN(16) : {" << std::endl;
-   out << "      KEEP ( *(.dimport_"  << name << ") )" << std::endl;
-   out << "      *(.dimport_"  << name << ".*)" << std::endl;
-   out << "   } > loadmem" << std::endl;
-   out << "}" << std::endl;
+   out << "SECTIONS\n"
+       << "{\n"
+       << "   .fimport_" << name << " ALIGN(16) : {\n"
+       << "      KEEP ( *(.fimport_"  << name << ") )\n"
+       << "      *(.fimport_"  << name << ".*)\n"
+       << "   } > loadmem\n"
+       << "   .dimport_"  << name << " ALIGN(16) : {\n"
+       << "      KEEP ( *(.dimport_"  << name << ") )\n"
+       << "      *(.dimport_"  << name << ".*)\n"
+       << "   } > loadmem\n"
+       << "}\n";
+}
+
+static void
+show_help(std::ostream& out,
+          const excmd::parser& parser,
+          const std::string& exec_name)
+{
+   fmt::print(out, "{} [options] <exports.def> <output.S> [<output.ld>]\n", exec_name);
+   fmt::print(out, "{}\n", parser.format_help(exec_name));
+   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
 }
 
 int
@@ -102,18 +120,61 @@ main(int argc, char **argv)
    std::string moduleName;
    std::vector<std::string> funcExports, dataExports;
    ReadMode readMode = ReadMode::INVALID;
+   excmd::parser parser;
+   excmd::option_state options;
 
-   if (argc < 3) {
-      std::cout << argv[0] << " <exports.def> <output.S> [<output.ld>]" << std::endl;
+   try {
+      using excmd::description;
+      using excmd::value;
+      parser.global_options()
+         .add_option("H,help",
+                     description { "Show help" })
+         .add_option("v,version",
+                     description { "Show version" })
+         ;
+
+      parser.default_command()
+         .add_argument("<exports.def>",
+                       description { "Path to input exports def file" },
+                       value<std::string> {})
+         .add_argument("<output.S>",
+                       description { "Path to output assembly file" },
+                       value<std::string> {})
+         .add_argument("<output.ld>",
+                       description { "Path to output linker script" },
+                       value<std::string> {})
+         ;
+
+      options = parser.parse(argc, argv);
+
+   }
+   catch (std::exception& ex) {
+      cerr << "Error parsing options: " << ex.what() << endl;
+      return -1;
+   }
+
+   if (options.has("help")) {
+      show_help(cout, parser, argv[0]);
       return 0;
    }
 
+   if (options.has("version")) {
+      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      return 0;
+   }
+
+   if (!options.has("<exports.def>") || !options.has("<output.S>")) {
+      cerr << "Missing mandatory arguments: <exports.def> <output.S>.\n";
+      show_help(cerr, parser, argv[0]);
+      return -1;
+   }
+
    {
-      std::ifstream in;
-      in.open(argv[1]);
+      auto exports_def = options.get<std::string>("<exports.def>");
+      std::ifstream in{exports_def};
 
       if (!in.is_open()) {
-         std::cout << "Could not open file " << argv[1] << " for reading" << std::endl;
+         cerr << "Could not open file " << exports_def << " for reading" << endl;
          return -1;
       }
 
@@ -146,7 +207,7 @@ main(int argc, char **argv)
             } else if (line.substr(1, 4) == "NAME") {
                moduleName = line.substr(6);
             } else {
-               std::cout << "Unexpected section type" << std::endl;
+               cerr << "Unexpected section type" << endl;
                return -1;
             }
             continue;
@@ -161,18 +222,18 @@ main(int argc, char **argv)
          } else if (readMode == ReadMode::DATA_WRAP) {
             dataExports.push_back(std::string(RPLWRAP_PREFIX) + line);
          } else {
-            std::cout << "Unexpected section data" << std::endl;
+            cerr << "Unexpected section data" << endl;
             return -1;
          }
       }
    }
 
    {
-      std::ofstream out;
-      out.open(argv[2]);
+      auto output_S = options.get<std::string>("<output.S>");
+      std::ofstream out{output_S};
 
       if (!out.is_open()) {
-         std::cout << "Could not open file " << argv[2] << " for writing" << std::endl;
+         cerr << "Could not open file " << output_S << " for writing" << endl;
          return -1;
       }
 
@@ -185,17 +246,15 @@ main(int argc, char **argv)
       }
    }
 
-   if (argc > 3) {
-      std::ofstream out;
-      out.open(argv[3]);
+   if (options.has("<output.ld>")) {
+      auto output_ld = options.get<std::string>("<output.ld>");
+      std::ofstream out{output_ld};
 
       if (!out.is_open()) {
-         std::cout << "Could not open file " << argv[3] << " for writing" << std::endl;
+         cerr << "Could not open file " << output_ld << " for writing" << endl;
          return -1;
       }
 
       writeLinkerScript(out, moduleName);
    }
-
-   return 0;
 }
