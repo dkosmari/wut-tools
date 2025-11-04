@@ -54,10 +54,12 @@ writeExports(std::ofstream &out,
    // Supposed to be a crc32 of the imports. Again, not actually checked.
    fmt::print(out, ".long 0x00000000\n\n");
 
-   fmt::print(out, ".asciz \"{}\"\n", moduleName);
+   fmt::print(out, ".ascii \"{}\"\n", moduleName);
+   // Pad with zeros to make length a multiple of 8.
+   std::size_t next_multiple = (moduleName.size() + 1ull + 8ull) & ~7ull;
+   std::size_t padding = next_multiple - moduleName.size();
+   fmt::print(out, ".skip {}\n", padding);
    fmt::print(out, "\n");
-   // Keep 8-byte alignment.
-   fmt::print(out, ".align 8\n\n");
 
    const char *type = isData ? "@object" : "@function";
 
