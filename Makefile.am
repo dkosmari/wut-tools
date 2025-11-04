@@ -1,6 +1,6 @@
 # Makefile.am -- Process this file with automake to produce Makefile.in
 
-AM_CXXFLAGS = -Wall
+AM_CXXFLAGS = -Wall -Werror
 
 AM_CPPFLAGS = \
 	-I$(srcdir)/src/common \

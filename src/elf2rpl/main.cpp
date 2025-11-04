@@ -58,7 +58,7 @@ getSectionByName(ElfFile &file, const char *name)
    return nullptr;
 }
 
-
+/*
 static ElfFile::Section *
 getSectionByType(ElfFile &file, elf::SectionType type)
 {
@@ -74,6 +74,7 @@ getSectionByType(ElfFile &file, elf::SectionType type)
 
    return nullptr;
 }
+*/
 
 const static std::string dwarf_prefix(".debug_");
 
@@ -372,7 +373,7 @@ fixRelocations(ElfFile &file)
       section->header.flags = 0u;
 
       auto &symbolSection = file.sections[section->header.link];
-      auto &targetSection = file.sections[section->header.info];
+      // auto &targetSection = file.sections[section->header.info];
 
       auto rels = reinterpret_cast<elf::Rela *>(section->data.data());
       auto numRels = section->data.size() / sizeof(elf::Rela);

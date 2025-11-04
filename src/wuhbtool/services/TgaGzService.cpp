@@ -9,7 +9,7 @@ namespace {
 
    struct FiMemoryFile {
       std::vector<uint8_t> data;
-      long pos;
+      std::size_t pos;
 
       FiMemoryFile() : data{}, pos{} { }
 
@@ -30,8 +30,8 @@ namespace {
       */
 
       unsigned write(const void *buffer, unsigned size, unsigned count) {
-         long writepos = pos;
-         long writesize = size*count;
+         std::size_t writepos = pos;
+         std::size_t writesize = size*count;
 
          pos += writesize;
          ensureSize();
@@ -120,7 +120,7 @@ namespace {
 
 }
 
-FileEntry* createTgaGzFileEntry(const char* inputFile, int width, int height, int bpp, const char* filename) {
+FileEntry* createTgaGzFileEntry(const char* inputFile, unsigned width, unsigned height, unsigned bpp, const char* filename) {
    FREE_IMAGE_FORMAT fif = FreeImage_GetFIFFromFilename(inputFile);
    if (fif == FIF_UNKNOWN || !FreeImage_FIFSupportsReading(fif)) {
       fprintf(stderr, "Unknown or unsupported image format: %s\n", inputFile);

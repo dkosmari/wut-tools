@@ -67,7 +67,7 @@ void filepath_os_append(filepath_t *fpath, oschar_t *path) {
 
     memset(tmppath, 0, MAX_OSPATH);
 
-    os_strncpy_to_char(tmppath, path, MAX_OSPATH);
+    os_strncpy_to_char(tmppath, path, MAX_OSPATH - 1);
     strcat(fpath->char_path, OS_PATH_SEPARATOR);
     strcat(fpath->char_path, tmppath);
     filepath_update(fpath);
@@ -113,7 +113,7 @@ void filepath_set(filepath_t *fpath, const char *path) {
     if (strlen(path) < MAX_OSPATH) {
         fpath->valid = VALIDITY_VALID;
         memset(fpath->char_path, 0, MAX_OSPATH);
-        strncpy(fpath->char_path, path, MAX_OSPATH);
+        strncpy(fpath->char_path, path, MAX_OSPATH - 1);
         filepath_update(fpath);
     } else {
         fpath->valid = VALIDITY_INVALID;
@@ -123,7 +123,7 @@ void filepath_set(filepath_t *fpath, const char *path) {
 void filepath_os_set(filepath_t *fpath, oschar_t *path) {
     char tmppath[MAX_OSPATH];
     memset(tmppath, 0, MAX_OSPATH);
-    os_strncpy_to_char(tmppath, path, MAX_OSPATH);
+    os_strncpy_to_char(tmppath, path, MAX_OSPATH - 1);
 
     filepath_set(fpath, tmppath);
 }

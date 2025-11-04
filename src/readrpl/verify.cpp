@@ -495,16 +495,16 @@ verifyRelocationTypes(const Rpl &rpl)
          continue;
       }
 
-      auto &symbolSection = rpl.sections[section.header.link];
-      auto &targetSection = rpl.sections[section.header.info];
+      // auto &symbolSection = rpl.sections[section.header.link];
+      // auto &targetSection = rpl.sections[section.header.info];
       auto rels = reinterpret_cast<const elf::Rela *>(section.data.data());
       auto numRels = section.data.size() / sizeof(elf::Rela);
 
       for (auto i = 0u; i < numRels; ++i) {
          auto info = rels[i].info;
-         auto addend = rels[i].addend;
-         auto offset = rels[i].offset;
-         auto index = info >> 8;
+         // auto addend = rels[i].addend;
+         // auto offset = rels[i].offset;
+         // auto index = info >> 8;
          auto type = info & 0xFF;
 
          switch (type) {

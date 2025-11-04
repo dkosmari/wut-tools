@@ -41,18 +41,18 @@ writeExports(std::ofstream &out,
              const std::vector<std::string> &exports)
 {
    if (isData) {
-      out << ".section .dimport_" << moduleName << ", \"a\", @0x80000002\n";
+      fmt::print(out, ".section .dimport_{}, \"a\", @0x80000002\n", moduleName);
    } else {
-      out << ".section .fimport_" << moduleName << ", \"ax\", @0x80000002\n";
+      fmt::print(out, ".section .fimport_{}, \"ax\", @0x80000002\n", moduleName);
    }
 
-   out << ".align 4\n\n";
+   fmt::print(out, ".align 4\n\n");
 
    // Usually the symbol count, but isn't checked on hardware.
    // Spoofed to allow ld to garbage-collect later.
-   out << ".long 1\n";
+   fmt::print(out, ".long 1\n");
    // Supposed to be a crc32 of the imports. Again, not actually checked.
-   out << ".long 0x00000000\n\n";
+   fmt::print(out, ".long 0x00000000\n\n");
 
    // Align module name up to 8 bytes
    auto moduleNameSize = (moduleName.length() + 1 + 7) & ~7;
@@ -64,26 +64,24 @@ writeExports(std::ofstream &out,
 
    // Add name data
    for (uint32_t data : secData) {
-      out << ".long 0x" << std::hex << byte_swap(data) << '\n';
+      fmt::print(out, ".long 0x{:x}\n", byte_swap(data));
    }
-   out << '\n';
+   fmt::print("\n");
 
    const char *type = isData ? "@object" : "@function";
 
-   for (auto i = 0; i < exports.size(); ++i) {
-      if (i < exports.size()) {
-         // Basically do -ffunction-sections
-         if (isData) {
-            out << ".section .dimport_" << moduleName << "." << exports[i] << ", \"a\", @0x80000002\n";
-         } else {
-            out << ".section .fimport_" << moduleName << "." << exports[i] << ", \"ax\", @0x80000002\n";
-         }
-         out << ".global " << exports[i] << '\n';
-         out << ".type " << exports[i] << ", " << type << '\n';
-         out << exports[i] << ":\n";
+   for (auto& name : exports) {
+      // Basically do -ffunction-sections
+      if (isData) {
+         fmt::print(out, ".section .dimport_{}.{}, \"a\", @0x80000002\n", moduleName, name);
+      } else {
+         fmt::print(out, ".section .fimport_{}.{}, \"ax\", @0x80000002\n", moduleName, name);
       }
-      out << ".long 0x0\n";
-      out << ".long 0x0\n\n";
+      fmt::print(out, ".global {}\n", name);
+      fmt::print(out, ".type {}, {}\n", name, type);
+      fmt::print(out, "{}:\n", name);
+      fmt::print(out, ".long 0x0\n");
+      fmt::print(out, ".long 0x0\n\n");
    }
 }
 
