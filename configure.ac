@@ -48,6 +48,7 @@ AS_CASE([$host],
         [AS_VAR_SET([PLATFORM], [generic])])
 AM_CONDITIONAL([PLATFORM_MINGW], [test $PLATFORM = mingw])
 AM_CONDITIONAL([PLATFORM_APPLE], [test $PLATFORM = apple])
+AC_MSG_NOTICE([Detected platform: $PLATFORM])
 
 
 AC_CONFIG_FILES([Makefile])
