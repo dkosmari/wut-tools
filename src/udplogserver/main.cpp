@@ -111,6 +111,7 @@ int main(int argc, char **argv)
          .add_argument("port",
                        description { "Set listening port (default is "s
                                      + std::to_string(SERVER_PORT) + ")"s },
+                       excmd::optional {},
                        value<int> {})
          ;
 

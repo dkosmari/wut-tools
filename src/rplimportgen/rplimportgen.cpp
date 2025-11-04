@@ -140,6 +140,7 @@ main(int argc, char **argv)
                        value<std::string> {})
          .add_argument("<output.ld>",
                        description { "Path to output linker script" },
+                       excmd::optional {},
                        value<std::string> {})
          ;
 
