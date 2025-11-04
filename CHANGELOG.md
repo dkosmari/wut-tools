@@ -8,7 +8,7 @@ General:
 - Small code fixes to compile with "-Wall -Wextra".
 
 rplimportgen:
-- Generate aligned strings with ".asciz" and ".align".
+- Generate aligned strings with ".ascii" and ".skip" directives.
 
 udplogserver:
 - Don't set socket to nonblock mode.
