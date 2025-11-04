@@ -63,15 +63,6 @@ int main(int argc, char **argv)
       return -1;
    }
 
-   // Set non blocking
-#ifdef _WIN32
-   u_long mode = 1;
-   ioctlsocket(fd, FIONBIO, &mode);
-#else
-   int flags = fcntl(fd, F_GETFL, 0);
-   fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-#endif
-
    // Bind socket
    memset(&addr, 0, sizeof(addr));
    addr.sin_family = AF_INET;
@@ -102,7 +93,7 @@ int main(int argc, char **argv)
 
       struct timeval tv;
       tv.tv_sec = 0;
-      tv.tv_usec = 10000;
+      tv.tv_usec = 250'000;
 
       if (select(fd + 1, &fdsRead, NULL, NULL, &tv) == 1) {
          struct sockaddr_in from;
