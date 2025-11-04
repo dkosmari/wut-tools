@@ -1,5 +1,7 @@
 # Makefile.am -- Process this file with automake to produce Makefile.in
 
+AM_CXXFLAGS = -Wall
+
 AM_CPPFLAGS = \
 	-I$(srcdir)/src/common \
 	-I$(srcdir)/libraries/excmd/src \
@@ -18,20 +20,17 @@ if PLATFORM_APPLE
 LDADD += -lc++
 endif
 
-common_headers = \
-	src/common/be_val.h		\
-	src/common/elf.h		\
-	src/common/rplwrap.h		\
-	src/common/type_traits.h	\
-	src/common/utils.h
-
-
-excmd_headers = \
-	libraries/excmd/src/excmd_exception.h	\
+noinst_HEADERS = \
 	libraries/excmd/src/excmd.h		\
+	libraries/excmd/src/excmd_exception.h	\
 	libraries/excmd/src/excmd_meta.h	\
 	libraries/excmd/src/excmd_str.h		\
-	libraries/excmd/src/excmd_value_parser.h
+	libraries/excmd/src/excmd_value_parser.h \
+	src/common/be_val.h			\
+	src/common/elf.h			\
+	src/common/rplwrap.h			\
+	src/common/type_traits.h		\
+	src/common/utils.h
 
 
 bin_PROGRAMS = \
@@ -65,10 +64,7 @@ libfmt_la_SOURCES = \
 	libraries/fmt/src/os.cc
 
 
-elf2rpl_SOURCES	= \
-	$(common_headers)	\
-	$(excmd_headers)	\
-	src/elf2rpl/main.cpp
+elf2rpl_SOURCES	= src/elf2rpl/main.cpp
 
 elf2rpl_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
@@ -80,8 +76,6 @@ elf2rpl_LDADD = \
 
 
 readrpl_SOURCES = \
-	$(common_headers)			\
-	$(excmd_headers)			\
 	src/readrpl/generate_exports_def.cpp	\
 	src/readrpl/generate_exports_def.h	\
 	src/readrpl/main.cpp			\
@@ -97,18 +91,14 @@ readrpl_LDADD = \
 	$(LDADD)
 
 
-rplexportgen_SOURCES = \
-	$(common_headers)			\
-	src/rplexportgen/rplexportgen.cpp
+rplexportgen_SOURCES = src/rplexportgen/rplexportgen.cpp
 
 rplexportgen_LDADD = \
 	$(ZLIB_LIBS) \
 	$(LDADD)
 
 
-rplimportgen_SOURCES = \
-	$(common_headers)			\
-	src/rplimportgen/rplimportgen.cpp
+rplimportgen_SOURCES = src/rplimportgen/rplimportgen.cpp
 
 rplimportgen_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
@@ -119,8 +109,16 @@ rplimportgen_LDADD = \
 	$(LDADD)
 
 
+udplogserver_SOURCES = src/udplogserver/main.cpp
+
+udplogserver_LDADD = $(LDADD)
+
+if PLATFORM_MINGW
+udplogserver_LDADD += -lws2_32
+endif PLATFORM_MINGW
+
+
 wuhbtool_SOURCES = \
-	$(excmd_headers)				\
 	src/wuhbtool/entities/BufferFileEntry.cpp	\
 	src/wuhbtool/entities/BufferFileEntry.h		\
 	src/wuhbtool/entities/DirectoryEntry.cpp	\
@@ -153,13 +151,6 @@ wuhbtool_LDADD = \
 	$(FREEIMAGE_LDFLAGS) -lfreeimage \
 	$(ZLIB_LIBS) \
 	$(LDADD)
-
-
-udplogserver_SOURCES = src/udplogserver/main.cpp
-
-if PLATFORM_MINGW
-udplogserver_LDADD = $(LDADD) -lws2_32
-endif PLATFORM_MINGW
 
 
 EXTRA_DIST = \

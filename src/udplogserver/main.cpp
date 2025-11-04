@@ -1,5 +1,6 @@
 #ifdef _WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -12,7 +13,11 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <excmd.h>
+#include <fmt/base.h>
+#include <fmt/ostream.h>
 #include <iostream>
+#include <stdexcept>
 #include <string_view>
 
 #ifdef HAVE_CONFIG_H
@@ -21,10 +26,18 @@
 
 #define SERVER_PORT 4405
 
+/*
+ * Note: you can get the same functionality from (OpenBSD) netcat:
+ *     nc -4 -l -u 4405
+ */
+
 using std::cerr;
+using std::clog;
 using std::cout;
 using std::endl;
 using std::flush;
+
+using namespace std::literals;
 
 volatile std::sig_atomic_t interrupted;
 
@@ -34,14 +47,94 @@ void handle_ctrl_c(int)
    interrupted = 1;
 }
 
+static std::string
+to_string(const sockaddr_in& addr)
+{
+   char result[INET_ADDRSTRLEN];
+   if (!inet_ntop(addr.sin_family, &addr.sin_addr, result, sizeof result))
+      throw std::logic_error{"cannot print address"};
+   return result + ":"s + std::to_string(ntohs(addr.sin_port));
+}
+
+static std::string
+errno_to_string()
+{
+#ifdef _WIN32
+   char *s = nullptr;
+   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER
+                 | FORMAT_MESSAGE_FROM_SYSTEM,
+                 nullptr,
+                 WSAGetLastError(),
+                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                 reinterpret_cast<LPTSTR>(&s),
+                 0,
+                 nullptr);
+   std::string result = s;
+   LocalFree(s);
+   return result;
+#else
+   char result[256];
+   return strerror_r(errno, result, sizeof result);
+#endif
+}
+
+static void
+show_help(std::ostream& out,
+          const excmd::parser& parser,
+          const std::string& exec_name)
+{
+   fmt::print(out, "{} [options] [port]\n", exec_name);
+   fmt::print(out, "{}\n", parser.format_help(exec_name));
+   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+}
+
 int main(int argc, char **argv)
 {
-   struct sockaddr_in addr;
-   unsigned short port = SERVER_PORT;
+   excmd::parser parser;
+   excmd::option_state options;
+   using excmd::description;
+   using excmd::value;
 
-   if (argc == 2) {
-      port = atoi(argv[1]);
+   unsigned short port = SERVER_PORT;
+   bool verbose = false;
+
+   try {
+      parser.global_options()
+         .add_option("h,help",
+                     description { "Show help" })
+         .add_option("version",
+                     description { "Show version" })
+         .add_option("v,verbose",
+                     description { "Print verbose messages to STDERR" })
+         ;
+      parser.default_command()
+         .add_argument("port",
+                       description { "Set listening port (default is "s
+                                     + std::to_string(SERVER_PORT) + ")"s },
+                       value<int> {})
+         ;
+
+      options = parser.parse(argc, argv);
    }
+   catch (std::exception& ex) {
+      cerr << "Error parsing options: " << ex.what() << endl;
+      return -1;
+   }
+
+   if (options.has("help")) {
+      show_help(cout, parser, argv[0]);
+      return 0;
+   }
+
+   if (options.has("version")) {
+      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      return 0;
+   }
+
+   if (options.has("port"))
+      port = options.get<int>("port");
+
+   verbose = options.has("verbose");
 
 #ifdef _WIN32
    WSADATA wsaData;
@@ -55,27 +148,36 @@ int main(int argc, char **argv)
    auto fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 #ifdef _WIN32
    if (fd == INVALID_SOCKET) {
+      auto msg = errno_to_string();
       WSACleanup();
 #else
    if (fd < 0) {
+      auto msg = errno_to_string();
 #endif
-      cerr << "Failed to create socket" << endl;
+      cerr << "Failed to create socket: " << msg << endl;
       return -1;
    }
+   if (verbose)
+      clog << "Created socket " << fd << endl;
 
    // Bind socket
+   struct sockaddr_in addr;
    memset(&addr, 0, sizeof(addr));
    addr.sin_family = AF_INET;
    addr.sin_addr.s_addr = htonl(INADDR_ANY);
    addr.sin_port = htons(port);
+   if (verbose)
+      clog << "Binding socket " << fd << " to " << to_string(addr) << endl;
    if (bind(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 #ifdef _WIN32
+      auto msg = errno_to_string();
       closesocket(fd);
       WSACleanup();
 #else
+      auto msg = errno_to_string();
       close(fd);
 #endif
-      cerr << "Failed to bind socket" << endl;
+      cerr << "Failed to bind socket: " << msg << endl;
       return -1;
    }
 
@@ -109,13 +211,23 @@ int main(int argc, char **argv)
                               reinterpret_cast<struct sockaddr *>(&from),
                               &fromLen);
 
-         if (recvd > 0)
+         if (recvd > 0) {
+            if (verbose)
+               clog << "Received " << recvd << " bytes" << endl;
             cout << std::string_view{buffer, static_cast<std::size_t>(recvd)} << flush;
-
+         } else {
+            if (verbose) {
+               auto msg = errno_to_string();
+               clog << "recvfrom returned " << recvd << ": " << msg << endl;
+            }
+         }
       }
 
       if (interrupted) {
-         cerr << "\nInterrupted." << endl;
+         if (verbose)
+            clog << "\nInterrupted." << endl;
+         else
+            clog << '\n';
          running = false;
       }
    }
