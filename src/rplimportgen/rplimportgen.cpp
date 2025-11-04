@@ -54,19 +54,10 @@ writeExports(std::ofstream &out,
    // Supposed to be a crc32 of the imports. Again, not actually checked.
    fmt::print(out, ".long 0x00000000\n\n");
 
-   // Align module name up to 8 bytes
-   auto moduleNameSize = (moduleName.length() + 1 + 7) & ~7;
-
-   // Setup name data
-   std::vector<uint32_t> secData;
-   secData.resize(moduleNameSize / 4, 0);
-   memcpy(secData.data(), moduleName.c_str(), moduleName.length());
-
-   // Add name data
-   for (uint32_t data : secData) {
-      fmt::print(out, ".long 0x{:x}\n", byte_swap(data));
-   }
+   fmt::print(out, ".asciz \"{}\"\n", moduleName);
    fmt::print(out, "\n");
+   // Keep 8-byte alignment.
+   fmt::print(out, ".align 8\n\n");
 
    const char *type = isData ? "@object" : "@function";
 
