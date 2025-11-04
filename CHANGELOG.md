@@ -7,6 +7,9 @@ General:
 - Updated fmt library to 12.0.0.
 - Small code fixes to compile with "-Wall -Wextra".
 
+rplimportgen:
+- Generated aligned strings with ".asciz" and ".align".
+
 udplogserver:
 - Don't set socket to nonblock mode.
 - Added command line options.
