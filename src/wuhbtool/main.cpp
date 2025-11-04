@@ -1,6 +1,9 @@
 #include <cstring>
 #include <algorithm>
 #include <excmd.h>
+#include <iostream>
+#include <fmt/base.h>
+#include <fmt/ostream.h>
 
 #include "entities/RootEntry.h"
 #include "entities/OSFileEntry.h"
@@ -8,6 +11,15 @@
 
 #include "services/RomFSService.h"
 #include "services/TgaGzService.h"
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+using std::cerr;
+using std::cout;
+using std::endl;
+
 
 static void deinitializeFreeImage() {
    FreeImage_DeInitialise();
@@ -32,6 +44,16 @@ static void addImageResource(DirectoryEntry *parent, const char* name, int width
    }
 }
 
+static void
+show_help(std::ostream& out,
+          const excmd::parser& parser,
+          const std::string& exec_name)
+{
+   fmt::print(out, "{} [options] <rpx-file> <output>\n", exec_name);
+   fmt::print(out, "{}\n", parser.format_help(exec_name));
+   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+}
+
 int main(int argc, char **argv) {
    excmd::parser parser;
    excmd::option_state options;
@@ -41,28 +63,31 @@ int main(int argc, char **argv) {
    try {
       parser.global_options()
             .add_option("H,help",
-                     description{"Show help."})
+                        description{"Show help"})
+            .add_option("version",
+                        description{"Show version"})
             .add_option("content",
-                     description{"Path to the /content directory"},
-                     value<std::string>{})
+                        description{"Path to the /content directory"},
+                        value<std::string>{})
             .add_option("name",
-                     description{"Long name of the application"},
-                     value<std::string>{})
+                        description{"Long name of the application"},
+                        value<std::string>{})
             .add_option("short-name",
-                     description{"Short name of the application"},
-                     value<std::string>{})
+                        description{"Short name of the application"},
+                        value<std::string>{})
             .add_option("author",
-                     description{"Author of the application"},
-                     value<std::string>{})
+                        description{"Author of the application"},
+                        value<std::string>{})
             .add_option("icon",
-                     description{"Application icon (128x128)"},
-                     value<std::string>{})
+                        description{"Application icon (128x128)"},
+                        value<std::string>{})
             .add_option("tv-image",
-                     description{"Splash Screen image shown on the TV (1280x720)"},
-                     value<std::string>{})
+                        description{"Splash Screen image shown on the TV (1280x720)"},
+                        value<std::string>{})
             .add_option("drc-image",
-               description{"Splash Screen image shown on the DRC (854x480)"},
-               value<std::string>{});
+                        description{"Splash Screen image shown on the DRC (854x480)"},
+                        value<std::string>{})
+         ;
 
       parser.default_command()
             .add_argument("rpx-file",
@@ -73,14 +98,23 @@ int main(int argc, char **argv) {
                        value<std::string>{});
 
       options = parser.parse(argc, argv);
-   } catch (excmd::exception &ex) {
-      fprintf(stderr, "Error parsing options: %s\n", ex.what());
+   } catch (std::exception &ex) {
+      cerr << "Error parsing options: " << ex.what() << endl;
       return EXIT_FAILURE;
    }
 
-   if (options.empty() || options.has("help")) {
-      printf("%s <rpx-file> <output> [options]\n\n", argv[0]);
-      printf("%s\n", parser.format_help(argv[0]).c_str());
+   if (options.has("help")) {
+      show_help(cout, parser, argv[0]);
+      return EXIT_SUCCESS;
+   }
+
+   if (options.empty()) {
+      show_help(cerr, parser, argv[0]);
+      return EXIT_FAILURE;
+   }
+
+   if (options.has("version")) {
+      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return EXIT_SUCCESS;
    }
 

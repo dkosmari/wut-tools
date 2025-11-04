@@ -1,3 +1,28 @@
+#### wut-tools ?.?.?
+General:
+- Updated and simplified build scripts, using more autoconf-archive macros.
+- Updated C++ language requirements to C++20.
+- Added "--version" option to all tools.
+- Error and log messages are sent to STDERR.
+- Updated fmt library to 12.0.0.
+- Small code fixes to compile with "-Wall -Wextra".
+
+udplogserver:
+- Don't set socket to nonblock mode.
+- Added command line options.
+- Handle SIGINT to shut down cleanly with "Ctrl+C".
+- Print out error messages.
+- Added "--verbose" option.
+
+wuhbtool:
+- Fixed potential buffer overflow due to incorrect usage of strncpy,
+- Show a warning when FreeImage dependency is missing, and avoid building wuhbtool.
+
+#### wut-tools 1.3.5
+elf2rpl:
+- Fix "LOADER" section relocation inside .elf.
+- Fix detecting failed offset calculations.
+
 #### wut-tools 1.3.4
 elf2rpl:
 - change load section alignment to 32.
@@ -12,7 +37,7 @@ elf2rpl:
 - Fix windows freeimage detection
 
 #### wut-tools 1.3.0
-elf2rpl: 
+elf2rpl:
 - enforce the SHF_WRITE flag on data sections.
 - fix address calculation for SYMTAB/STRTAB relocations.
 - Automatically discard DWARF debugging sections.
