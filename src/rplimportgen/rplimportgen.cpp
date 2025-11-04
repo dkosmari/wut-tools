@@ -66,7 +66,7 @@ writeExports(std::ofstream &out,
    for (uint32_t data : secData) {
       fmt::print(out, ".long 0x{:x}\n", byte_swap(data));
    }
-   fmt::print("\n");
+   fmt::print(out, "\n");
 
    const char *type = isData ? "@object" : "@function";
 
