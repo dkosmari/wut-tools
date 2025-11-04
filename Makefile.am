@@ -38,8 +38,11 @@ bin_PROGRAMS = \
 	readrpl		\
 	rplexportgen	\
 	rplimportgen	\
-	udplogserver	\
-	wuhbtool
+	udplogserver
+
+if BUILD_WUHBTOOL
+bin_PROGRAMS += wuhbtool
+endif BUILD_WUHBTOOL
 
 
 noinst_LTLIBRARIES = libfmt.la
@@ -118,6 +121,8 @@ udplogserver_LDADD += -lws2_32
 endif PLATFORM_MINGW
 
 
+if BUILD_WUHBTOOL
+
 wuhbtool_SOURCES = \
 	src/wuhbtool/entities/BufferFileEntry.cpp	\
 	src/wuhbtool/entities/BufferFileEntry.h		\
@@ -151,6 +156,8 @@ wuhbtool_LDADD = \
 	$(FREEIMAGE_LDFLAGS) -lfreeimage \
 	$(ZLIB_LIBS) \
 	$(LDADD)
+
+endif BUILD_WUHBTOOL
 
 
 EXTRA_DIST = \

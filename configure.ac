@@ -29,21 +29,25 @@ AC_SYS_LARGEFILE
 
 AC_LANG([C++])
 AX_CXX_COMPILE_STDCXX([20], [noext], [mandatory])
-dnl AX_APPEND_COMPILE_FLAGS([-fmodules-ts], [CXXFLAGS])
 
 PKG_CHECK_MODULES([ZLIB], [zlib])
 
 
-AX_CHECK_LIBRARY([FREEIMAGE], [FreeImage.h], [freeimage])
+AX_CHECK_LIBRARY([FREEIMAGE], [FreeImage.h], [freeimage],
+                 [AS_VAR_SET([FOUND_FREEIMAGE], [yes])],
+                 [AS_VAR_SET([FOUND_FREEIMAGE], [no])])
+AS_VAR_IF([FOUND_FREEIMAGE], [no],
+          [AC_MSG_WARN([FreeImage not found, will not build wuhbtool!])])
+AM_CONDITIONAL([BUILD_WUHBTOOL], [test $FOUND_FREEIMAGE = yes])
 
 
 PLATFORM=
 AS_CASE([$host],
-        [*-*-mingw*], [PLATFORM=mingw],
-        [*-apple-darwin*], [PLATFORM=apple],
-        [])
-AM_CONDITIONAL([PLATFORM_MINGW], [test "x$PLATFORM" = xmingw])
-AM_CONDITIONAL([PLATFORM_APPLE], [test "x$PLATFORM" = xapple])
+        [*-*-mingw*], [AS_VAR_SET([PLATFORM], [mingw])],
+        [*-apple-darwin*], [AS_VAR_SET([PLATFORM], [apple])],
+        [AS_VAR_SET([PLATFORM], [generic])])
+AM_CONDITIONAL([PLATFORM_MINGW], [test $PLATFORM = mingw])
+AM_CONDITIONAL([PLATFORM_APPLE], [test $PLATFORM = apple])
 
 
 AC_CONFIG_FILES([Makefile])
