@@ -1,14 +1,14 @@
 #### wut-tools ?.?.?
 General:
 - Updated and simplified build scripts, using more autoconf-archive macros.
-- Updated C++ language requirements to C++20.
+- Updated C++ dialect to C++20.
 - Added "--version" option to all tools.
 - Error and log messages are sent to STDERR.
 - Updated fmt library to 12.0.0.
 - Small code fixes to compile with "-Wall -Wextra".
 
 rplimportgen:
-- Generated aligned strings with ".asciz" and ".align".
+- Generate aligned strings with ".asciz" and ".align".
 
 udplogserver:
 - Don't set socket to nonblock mode.
