@@ -1,11 +1,15 @@
 #include "generate_exports_def.h"
 
-#include <cstdio>
-#include <cstring>
-#include <fmt/format.h>
+#include <fmt/base.h>
+#include <fmt/ostream.h>
+#include <fstream>
+#include <iostream>
+#include <unordered_set>
 
-static const char *
-sExportBlacklist[] = {
+using std::cerr;
+
+static const std::unordered_set<std::string>
+sExportBlacklist = {
    "__get_eh_globals",
    "__get_eh_init_block",
    "__get_eh_mem_manage",
@@ -50,27 +54,21 @@ sExportBlacklist[] = {
 static bool
 inBlacklist(const char *name)
 {
-   for (auto i = 0u; i < sizeof(sExportBlacklist) / sizeof(sExportBlacklist[0]); ++i) {
-      if (strcmp(name, sExportBlacklist[i]) == 0) {
-         return true;
-      }
-   }
-
-   return false;
+   return sExportBlacklist.contains(name);
 }
 
 bool
 generateExportsDef(const Rpl &rpl,
                    const std::string &rplName,
-                   const std::string &outFileName)
+                   const std::filesystem::path &outFileName)
 {
-   FILE *fh = fopen(outFileName.c_str(), "w");
-   if (!fh) {
-      fmt::print("Failed to open {} for writing!", outFileName);
+   std::ofstream out{outFileName};
+   if (!out.is_open()) {
+      fmt::println(cerr, "Failed to open \"{}\" for writing!", outFileName.string());
       return false;
    }
 
-   fmt::print(fh, ":NAME {}\n", rplName);
+   fmt::println(out, ":NAME {}", rplName);
 
    for (auto &section : rpl.sections) {
       if (section.header.type == elf::SHT_RPL_EXPORTS) {
@@ -78,9 +76,9 @@ generateExportsDef(const Rpl &rpl,
          auto strTab = section.data.data();
 
          if (section.header.flags & elf::SHF_EXECINSTR) {
-            fmt::print(fh, "\n:TEXT\n");
+            fmt::println(out, "\n:TEXT");
          } else {
-            fmt::print(fh, "\n:DATA\n");
+            fmt::println(out, "\n:DATA");
          }
 
          for (auto i = 0u; i < exports->count; ++i) {
@@ -92,15 +90,14 @@ generateExportsDef(const Rpl &rpl,
             auto name = strTab + (exports->exports[i].name & 0x7FFFFFFF);
 
             if (inBlacklist(name)) {
-               fmt::print(fh, "//");
+               fmt::print(out, "//");
             }
 
-            fmt::print(fh, "{}\n", name);
+            fmt::println(out, "{}", name);
          }
 
       }
    }
 
-   fclose(fh);
    return true;
 }
