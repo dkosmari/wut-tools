@@ -1,18 +1,13 @@
 #include "utils.h"
 #include "rplwrap.h"
 
-#include <algorithm>
-#include <array>
-#include <cctype>
 #include <cstdint>
-#include <cstring>
+#include <cstddef>
 #include <excmd.h>
 #include <fmt/base.h>
 #include <fmt/ostream.h>
 #include <fstream>
-#include <functional>
 #include <iostream>
-#include <locale>
 #include <string>
 #include <vector>
 #include <zlib.h>
@@ -23,7 +18,6 @@
 
 using std::cerr;
 using std::cout;
-using std::endl;
 
 enum class ReadMode
 {
@@ -35,64 +29,66 @@ enum class ReadMode
 };
 
 static void
-writeExports(std::ofstream &out,
+writeExports(std::ostream &out,
              const std::string &moduleName,
              bool isData,
              const std::vector<std::string> &exports)
 {
    if (isData) {
-      fmt::print(out, ".section .dimport_{}, \"a\", @0x80000002\n", moduleName);
+      fmt::println(out, ".section .dimport_{}, \"a\", @0x80000002", moduleName);
    } else {
-      fmt::print(out, ".section .fimport_{}, \"ax\", @0x80000002\n", moduleName);
+      fmt::println(out, ".section .fimport_{}, \"ax\", @0x80000002", moduleName);
    }
 
-   fmt::print(out, ".align 4\n\n");
+   fmt::println(out, ".align 4\n");
 
    // Usually the symbol count, but isn't checked on hardware.
    // Spoofed to allow ld to garbage-collect later.
-   fmt::print(out, ".long 1\n");
+   fmt::println(out, ".long 1");
    // Supposed to be a crc32 of the imports. Again, not actually checked.
-   fmt::print(out, ".long 0x00000000\n\n");
+   fmt::println(out, ".long 0x00000000\n");
 
-   fmt::print(out, ".ascii \"{}\"\n", moduleName);
+   fmt::println(out, ".ascii \"{}\"", moduleName);
    // Pad with zeros to make length a multiple of 8.
    std::size_t next_multiple = (moduleName.size() + 1ull + 8ull) & ~7ull;
    std::size_t padding = next_multiple - moduleName.size();
-   fmt::print(out, ".skip {}\n", padding);
-   fmt::print(out, "\n");
+   fmt::println(out, ".skip {}", padding);
+   fmt::println(out, "");
 
    const char *type = isData ? "@object" : "@function";
 
    for (auto& name : exports) {
       // Basically do -ffunction-sections
       if (isData) {
-         fmt::print(out, ".section .dimport_{}.{}, \"a\", @0x80000002\n", moduleName, name);
+         fmt::println(out, ".section .dimport_{}.{}, \"a\", @0x80000002", moduleName, name);
       } else {
-         fmt::print(out, ".section .fimport_{}.{}, \"ax\", @0x80000002\n", moduleName, name);
+         fmt::println(out, ".section .fimport_{}.{}, \"ax\", @0x80000002", moduleName, name);
       }
-      fmt::print(out, ".global {}\n", name);
-      fmt::print(out, ".type {}, {}\n", name, type);
-      fmt::print(out, "{}:\n", name);
-      fmt::print(out, ".long 0x0\n");
-      fmt::print(out, ".long 0x0\n\n");
+      fmt::println(out, ".global {}", name);
+      fmt::println(out, ".type {}, {}", name, type);
+      fmt::println(out, "{}:", name);
+      fmt::println(out, ".long 0x0");
+      fmt::println(out, ".long 0x0\n");
    }
 }
 
 static void
-writeLinkerScript(std::ofstream &out,
+writeLinkerScript(std::ostream &out,
                   const std::string &name)
 {
-   out << "SECTIONS\n"
-       << "{\n"
-       << "   .fimport_" << name << " ALIGN(16) : {\n"
-       << "      KEEP ( *(.fimport_"  << name << ") )\n"
-       << "      *(.fimport_"  << name << ".*)\n"
-       << "   } > loadmem\n"
-       << "   .dimport_"  << name << " ALIGN(16) : {\n"
-       << "      KEEP ( *(.dimport_"  << name << ") )\n"
-       << "      *(.dimport_"  << name << ".*)\n"
-       << "   } > loadmem\n"
-       << "}\n";
+   fmt::print(out,
+              "SECTIONS\n"
+              "{{\n"
+              "   .fimport_{0} ALIGN(16) : {{\n"
+              "      KEEP ( *(.fimport_{0}) )\n"
+              "      *(.fimport_{0}.*)\n"
+              "   }} > loadmem\n"
+              "   .dimport_{0} ALIGN(16) : {{\n"
+              "      KEEP ( *(.dimport_{0}) )\n"
+              "      *(.dimport_{0}.*)\n"
+              "   }} > loadmem\n"
+              "}}\n",
+              name);
 }
 
 static void
@@ -100,9 +96,9 @@ show_help(std::ostream& out,
           const excmd::parser& parser,
           const std::string& exec_name)
 {
-   fmt::print(out, "{} [options] <exports.def> <output.S> [<output.ld>]\n", exec_name);
-   fmt::print(out, "{}\n", parser.format_help(exec_name));
-   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+   fmt::println(out, "{} [options] <exports.def> <output.S> [<output.ld>]", exec_name);
+   fmt::println(out, "{}", parser.format_help(exec_name));
+   fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
 
 int
@@ -141,7 +137,7 @@ main(int argc, char **argv)
 
    }
    catch (std::exception& ex) {
-      cerr << "Error parsing options: " << ex.what() << endl;
+      fmt::println(cerr, "Error parsing options: {}", ex.what());
       return -1;
    }
 
@@ -151,12 +147,12 @@ main(int argc, char **argv)
    }
 
    if (options.has("version")) {
-      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println("{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return 0;
    }
 
    if (!options.has("<exports.def>") || !options.has("<output.S>")) {
-      cerr << "Missing mandatory arguments: <exports.def> <output.S>.\n";
+      fmt::println(cerr, "Missing mandatory arguments: <exports.def> <output.S>");
       show_help(cerr, parser, argv[0]);
       return -1;
    }
@@ -166,7 +162,7 @@ main(int argc, char **argv)
       std::ifstream in{exports_def};
 
       if (!in.is_open()) {
-         cerr << "Could not open file " << exports_def << " for reading" << endl;
+         fmt::println(cerr, "Could not open file \"{}\" for reading.", exports_def);
          return -1;
       }
 
@@ -199,7 +195,7 @@ main(int argc, char **argv)
             } else if (line.substr(1, 4) == "NAME") {
                moduleName = line.substr(6);
             } else {
-               cerr << "Unexpected section type" << endl;
+               fmt::println(cerr, "Unexpected section type: {}", line.substr(1));
                return -1;
             }
             continue;
@@ -214,7 +210,7 @@ main(int argc, char **argv)
          } else if (readMode == ReadMode::DATA_WRAP) {
             dataExports.push_back(std::string(RPLWRAP_PREFIX) + line);
          } else {
-            cerr << "Unexpected section data" << endl;
+            fmt::println(cerr, "Unexpected section data.");
             return -1;
          }
       }
@@ -225,7 +221,7 @@ main(int argc, char **argv)
       std::ofstream out{output_S};
 
       if (!out.is_open()) {
-         cerr << "Could not open file " << output_S << " for writing" << endl;
+         fmt::println(cerr, "Could not open file \"{}\" for writing.", output_S);
          return -1;
       }
 
@@ -243,7 +239,7 @@ main(int argc, char **argv)
       std::ofstream out{output_ld};
 
       if (!out.is_open()) {
-         cerr << "Could not open file " << output_ld << " for writing" << endl;
+         fmt::println(cerr, "Could not open file \"{}\" for writing.", output_ld);
          return -1;
       }
 
