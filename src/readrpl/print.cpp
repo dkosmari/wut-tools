@@ -1,6 +1,9 @@
 #include "print.h"
 #include <fmt/base.h>
+#include <iostream>
 #include <string>
+
+using std::cout;
 
 static std::string
 formatET(uint32_t type)
@@ -244,32 +247,32 @@ void
 printHeader(const Rpl &rpl)
 {
    const auto &header = rpl.header;
-   fmt::println("ElfHeader");
-   fmt::println("  {:<20} = 0x{:08X}",    "magic",      header.magic.value());
-   fmt::println("  {:<20} = {}",          "fileClass",  unsigned{header.fileClass});
-   fmt::println("  {:<20} = {}",          "encoding",   unsigned{header.encoding});
-   fmt::println("  {:<20} = {}",          "elfVersion", unsigned{header.elfVersion});
-   fmt::println("  {:<20} = {} 0x{:04x}", "abi",        formatEABI(header.abi), header.abi.value());
-   fmt::println("  {:<20} = {} 0x{:04X}", "type",       formatET(header.type), header.type.value());
-   fmt::println("  {:<20} = {} {}",       "machine",    formatEM(header.machine), header.machine);
-   fmt::println("  {:<20} = 0x{:X}",      "version",    header.version.value());
-   fmt::println("  {:<20} = 0x{:08X}",    "entry",      header.entry.value());
-   fmt::println("  {:<20} = 0x{:X}",      "phoff",      header.phoff.value());
-   fmt::println("  {:<20} = 0x{:X}",      "shoff",      header.shoff.value());
-   fmt::println("  {:<20} = 0x{:X}",      "flags",      header.flags.value());
-   fmt::println("  {:<20} = {}",          "ehsize",     header.ehsize);
-   fmt::println("  {:<20} = {}",          "phentsize",  header.phentsize);
-   fmt::println("  {:<20} = {}",          "phnum",      header.phnum);
-   fmt::println("  {:<20} = {}",          "shentsize",  header.shentsize);
-   fmt::println("  {:<20} = {}",          "shnum",      header.shnum);
-   fmt::println("  {:<20} = {}",          "shstrndx",   header.shstrndx);
+   fmt::println(cout, "ElfHeader");
+   fmt::println(cout, "  {:<20} = 0x{:08X}",    "magic",      header.magic.value());
+   fmt::println(cout, "  {:<20} = {}",          "fileClass",  unsigned{header.fileClass});
+   fmt::println(cout, "  {:<20} = {}",          "encoding",   unsigned{header.encoding});
+   fmt::println(cout, "  {:<20} = {}",          "elfVersion", unsigned{header.elfVersion});
+   fmt::println(cout, "  {:<20} = {} 0x{:04x}", "abi",        formatEABI(header.abi), header.abi.value());
+   fmt::println(cout, "  {:<20} = {} 0x{:04X}", "type",       formatET(header.type), header.type.value());
+   fmt::println(cout, "  {:<20} = {} {}",       "machine",    formatEM(header.machine), header.machine);
+   fmt::println(cout, "  {:<20} = 0x{:X}",      "version",    header.version.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}",    "entry",      header.entry.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",      "phoff",      header.phoff.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",      "shoff",      header.shoff.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",      "flags",      header.flags.value());
+   fmt::println(cout, "  {:<20} = {}",          "ehsize",     header.ehsize);
+   fmt::println(cout, "  {:<20} = {}",          "phentsize",  header.phentsize);
+   fmt::println(cout, "  {:<20} = {}",          "phnum",      header.phnum);
+   fmt::println(cout, "  {:<20} = {}",          "shentsize",  header.shentsize);
+   fmt::println(cout, "  {:<20} = {}",          "shnum",      header.shnum);
+   fmt::println(cout, "  {:<20} = {}",          "shstrndx",   header.shstrndx);
 }
 
 void
 printSectionSummary(const Rpl &rpl)
 {
-   fmt::println("Sections:");
-   fmt::println(
+   fmt::println(cout, "Sections:");
+   fmt::println(cout,
       "  {:<4} {:<20} {:<16} {:<8} {:<6} {:<6} {:<2} {:<4} {:<2} {:<4} {:<5}",
       "[Nr]", "Name", "Type", "Addr", "Off", "Size", "ES", "Flag", "Lk", "Info", "Align");
 
@@ -278,7 +281,7 @@ printSectionSummary(const Rpl &rpl)
       auto type = formatSHT(section.header.type);
       auto flags = formatSHF(section.header.flags);
 
-      fmt::println(
+      fmt::println(cout,
          "  [{:>2}] {:<20} {:<16} {:08X} {:06X} {:06X} {:02X} {:>4} {:>2} {:>4} {:>5}",
          i,
          section.name,
@@ -299,41 +302,41 @@ printFileInfo(const Rpl &rpl,
               const Section &section)
 {
    auto &info = *reinterpret_cast<const elf::RplFileInfo *>(section.data.data());
-   fmt::println("  {:<20} = 0x{:08X}", "version",        info.version.value());
-   fmt::println("  {:<20} = 0x{:08X}", "textSize",       info.textSize.value());
-   fmt::println("  {:<20} = 0x{:X}",   "textAlign",      info.textAlign.value());
-   fmt::println("  {:<20} = 0x{:08X}", "dataSize",       info.dataSize.value());
-   fmt::println("  {:<20} = 0x{:X}",   "dataAlign",      info.dataAlign.value());
-   fmt::println("  {:<20} = 0x{:08X}", "loadSize",       info.loadSize.value());
-   fmt::println("  {:<20} = 0x{:X}",   "loadAlign",      info.loadAlign.value());
-   fmt::println("  {:<20} = 0x{:X}",   "tempSize",       info.tempSize.value());
-   fmt::println("  {:<20} = 0x{:X}",   "trampAdjust",    info.trampAdjust.value());
-   fmt::println("  {:<20} = 0x{:X}",   "trampAddition",  info.trampAddition.value());
-   fmt::println("  {:<20} = 0x{:08X}", "sdaBase",        info.sdaBase.value());
-   fmt::println("  {:<20} = 0x{:08X}", "sda2Base",       info.sda2Base.value());
-   fmt::println("  {:<20} = 0x{:08X}", "stackSize",      info.stackSize.value());
-   fmt::println("  {:<20} = 0x{:08X}", "heapSize",       info.heapSize.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "version",        info.version.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "textSize",       info.textSize.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "textAlign",      info.textAlign.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "dataSize",       info.dataSize.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "dataAlign",      info.dataAlign.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "loadSize",       info.loadSize.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "loadAlign",      info.loadAlign.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "tempSize",       info.tempSize.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "trampAdjust",    info.trampAdjust.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "trampAddition",  info.trampAddition.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "sdaBase",        info.sdaBase.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "sda2Base",       info.sda2Base.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "stackSize",      info.stackSize.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "heapSize",       info.heapSize.value());
 
    if (info.filename) {
       auto filename = section.data.data() + info.filename;
-      fmt::println("  {:<20} = {}",    "filename",       filename);
+      fmt::println(cout, "  {:<20} = {}",    "filename",       filename);
    } else {
-      fmt::println("  {:<20} = 0",     "filename");
+      fmt::println(cout, "  {:<20} = 0",     "filename");
    }
 
-   fmt::println("  {:<20} = 0x{:X}",   "flags",               info.flags.value());
-   fmt::println("  {:<20} = 0x{:08X}", "minSdkVersion",       info.minVersion.value());
-   fmt::println("  {:<20} = {}",       "compressionLevel",    info.compressionLevel.value());
-   fmt::println("  {:<20} = 0x{:X}",   "fileInfoPad",         info.fileInfoPad.value());
-   fmt::println("  {:<20} = 0x{:X}",   "sdkVersion",          info.cafeSdkVersion.value());
-   fmt::println("  {:<20} = 0x{:X}",   "sdkRevision",         info.cafeSdkRevision.value());
-   fmt::println("  {:<20} = 0x{:X}",   "tlsModuleIndex",      info.tlsModuleIndex.value());
-   fmt::println("  {:<20} = 0x{:X}",   "tlsAlignShift",       info.tlsAlignShift.value());
-   fmt::println("  {:<20} = 0x{:X}",   "runtimeFileInfoSize", info.runtimeFileInfoSize.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "flags",               info.flags.value());
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "minSdkVersion",       info.minVersion.value());
+   fmt::println(cout, "  {:<20} = {}",       "compressionLevel",    info.compressionLevel.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "fileInfoPad",         info.fileInfoPad.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "sdkVersion",          info.cafeSdkVersion.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "sdkRevision",         info.cafeSdkRevision.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "tlsModuleIndex",      info.tlsModuleIndex.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "tlsAlignShift",       info.tlsAlignShift.value());
+   fmt::println(cout, "  {:<20} = 0x{:X}",   "runtimeFileInfoSize", info.runtimeFileInfoSize.value());
 
    if (info.tagOffset) {
       const char *tags = section.data.data() + info.tagOffset;
-      fmt::println("  Tags:");
+      fmt::println(cout, "  Tags:");
 
       while (*tags) {
          auto key = tags;
@@ -341,7 +344,7 @@ printFileInfo(const Rpl &rpl,
          auto value = tags;
          tags += strlen(tags) + 1;
 
-         fmt::println("    \"{}\" = \"{}\"", key, value);
+         fmt::println(cout, "    \"{}\" = \"{}\"", key, value);
       }
    }
 }
@@ -350,7 +353,7 @@ void
 printRela(const Rpl &rpl,
           const Section &section)
 {
-   fmt::print(
+   fmt::print(cout,
       "  {:<8} {:<8} {:<16} {:<8} {}\n", "Offset", "Info", "Type", "Value", "Name + Addend");
 
    auto &symSec = rpl.sections[section.header.link];
@@ -370,7 +373,7 @@ printRela(const Rpl &rpl,
       auto symbol = symbols[index];
       auto name = reinterpret_cast<const char*>(symStrTab.data.data()) + symbol.name;
 
-      fmt::println(
+      fmt::println(cout,
          "  {:08X} {:08X} {:<16} {:08X} {} + {:X}",
          rela.offset.value(),
          rela.info.value(),
@@ -387,8 +390,8 @@ printSymTab(const Rpl &rpl,
 {
    auto strTab = reinterpret_cast<const char*>(rpl.sections[section.header.link].data.data());
 
-   fmt::print(
-      "  {:<4} {:<8} {:<6} {:<8} {:<8} {:<3} {}\n",
+   fmt::println(cout,
+      "  {:<4} {:<8} {:<6} {:<8} {:<8} {:<3} {}",
       "Num", "Value", "Size", "Type", "Bind", "Ndx", "Name");
 
    auto id = 0u;
@@ -405,7 +408,7 @@ printSymTab(const Rpl &rpl,
       auto bindingName = formatSymBinding(binding);
       auto ndx = formatSymShndx(symbol.shndx);
 
-      fmt::println(
+      fmt::println(cout,
          "  {:>4} {:08X} {:>6} {:<8} {:<8} {:>3} {}",
          id,
          symbol.value.value(),
@@ -425,9 +428,9 @@ printRplImports(const Rpl &rpl,
 {
    auto sectionIndex = getSectionIndex(rpl, section);
    auto import = reinterpret_cast<const elf::RplImport *>(section.data.data());
-   fmt::println("  {:<20} = {}", "name", import->name);
-   fmt::println("  {:<20} = 0x{:08X}", "signature", import->signature.value());
-   fmt::println("  {:<20} = {}", "count", import->count);
+   fmt::println(cout, "  {:<20} = {}", "name", import->name);
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "signature", import->signature.value());
+   fmt::println(cout, "  {:<20} = {}", "count", import->count);
 
    if (import->count) {
       for (auto &symSection : rpl.sections) {
@@ -445,7 +448,7 @@ printRplImports(const Rpl &rpl,
 
             if (symbol.shndx == sectionIndex &&
                (type == elf::STT_FUNC || type == elf::STT_OBJECT)) {
-               fmt::println("    {}", strTab + symbol.name);
+               fmt::println(cout, "    {}", strTab + symbol.name);
             }
          }
       }
@@ -460,7 +463,7 @@ printRplCrcs(const Rpl &rpl,
    auto count = section.data.size() / sizeof(elf::RplCrc);
 
    for (auto i = 0u; i < count; ++i) {
-      fmt::println("  [{:>2}] 0x{:08X} {}", i, crcs[i].crc.value(), section.name);
+      fmt::println(cout, "  [{:>2}] 0x{:08X} {}", i, crcs[i].crc.value(), section.name);
    }
 }
 
@@ -470,14 +473,14 @@ printRplExports(const Rpl &rpl,
 {
    auto exports = reinterpret_cast<const elf::RplExport *>(section.data.data());
    auto strTab = section.data.data();
-   fmt::println("  {:<20} = 0x{:08X}", "signature", exports->signature.value());
-   fmt::println("  {:<20} = {}", "count", exports->count);
+   fmt::println(cout, "  {:<20} = 0x{:08X}", "signature", exports->signature.value());
+   fmt::println(cout, "  {:<20} = {}", "count", exports->count);
 
    for (auto i = 0u; i < exports->count; ++i) {
       // TLS exports have the high bit set in name for some unknown reason...
       auto name = strTab + (exports->exports[i].name & 0x7FFFFFFF);
       auto value = exports->exports[i].value;
 
-      fmt::println("    0x{:08X} {}", value.value(), name);
+      fmt::println(cout, "    0x{:08X} {}", value.value(), name);
    }
 }

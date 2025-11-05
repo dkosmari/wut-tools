@@ -147,7 +147,7 @@ main(int argc, char **argv)
    }
 
    if (options.has("version")) {
-      fmt::println("{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println(cout, "{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return 0;
    }
 

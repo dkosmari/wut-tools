@@ -174,7 +174,7 @@ int main(int argc, char **argv)
    }
 
    if (options.has("version")) {
-      fmt::println("{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println(cout, "{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return 0;
    }
 
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
       fh.seekg(rpl.header.shoff + rpl.header.shentsize * i);
 
       if (!readSection(fh, section, i)) {
-         fmt::println("Error reading section {}", i);
+         fmt::println(cerr, "Error reading section {}", i);
          return ERROR_BAD_INPUT;
       }
 
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
    for (auto i = 0u; i < rpl.sections.size(); ++i) {
       auto &section = rpl.sections[i];
       auto printSectionHeader = [&](){
-         fmt::println(
+         fmt::println(cout,
             "Section {}: {}, {}, {} bytes",
             i, formatSHT(section.header.type), section.name, section.data.size());
       };

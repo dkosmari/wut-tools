@@ -34,8 +34,6 @@
 using std::cerr;
 using std::clog;
 using std::cout;
-using std::endl;
-using std::flush;
 
 using namespace std::literals;
 
@@ -83,9 +81,9 @@ show_help(std::ostream& out,
           const excmd::parser& parser,
           const std::string& exec_name)
 {
-   fmt::print(out, "{} [options] [port]\n", exec_name);
-   fmt::print(out, "{}\n", parser.format_help(exec_name));
-   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+   fmt::println(out, "{} [options] [port]", exec_name);
+   fmt::println(out, "{}", parser.format_help(exec_name));
+   fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char **argv)
@@ -118,7 +116,7 @@ int main(int argc, char **argv)
       options = parser.parse(argc, argv);
    }
    catch (std::exception& ex) {
-      cerr << "Error parsing options: " << ex.what() << endl;
+      fmt::println(cerr, "Error parsing options: {}", ex.what());
       return -1;
    }
 
@@ -128,7 +126,7 @@ int main(int argc, char **argv)
    }
 
    if (options.has("version")) {
-      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println(cout, "{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return 0;
    }
 
@@ -140,7 +138,7 @@ int main(int argc, char **argv)
 #ifdef _WIN32
    WSADATA wsaData;
    if (WSAStartup(MAKEWORD(2, 2), &wsaData) == SOCKET_ERROR) {
-      cerr << "WSAStartup() failed" << endl;
+      fmt::println(cerr, "WSAStartup() failed");
       return -1;
    }
 #endif
@@ -155,11 +153,11 @@ int main(int argc, char **argv)
    if (fd < 0) {
       auto msg = errno_to_string();
 #endif
-      cerr << "Failed to create socket: " << msg << endl;
+      fmt::println(cerr, "Failed to create socket: {}", msg);
       return -1;
    }
    if (verbose)
-      clog << "Created socket " << fd << endl;
+      fmt::println(clog, "Created socket {}", fd);
 
    // Bind socket
    struct sockaddr_in addr;
@@ -168,17 +166,17 @@ int main(int argc, char **argv)
    addr.sin_addr.s_addr = htonl(INADDR_ANY);
    addr.sin_port = htons(port);
    if (verbose)
-      clog << "Binding socket " << fd << " to " << to_string(addr) << endl;
+      fmt::println(clog, "Binding socket {} to {}", fd, to_string(addr));
    if (bind(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 #ifdef _WIN32
-      auto msg = errno_to_string();
+      auto msg = errno_to_string(); // grab error message before any other syscall
       closesocket(fd);
       WSACleanup();
 #else
-      auto msg = errno_to_string();
+      auto msg = errno_to_string(); // grab error message before any other syscall
       close(fd);
 #endif
-      cerr << "Failed to bind socket: " << msg << endl;
+      fmt::println(cerr, "Failed to bind socket: {}", msg);
       return -1;
    }
 
@@ -214,21 +212,22 @@ int main(int argc, char **argv)
 
          if (recvd > 0) {
             if (verbose)
-               clog << "Received " << recvd << " bytes" << endl;
-            cout << std::string_view{buffer, static_cast<std::size_t>(recvd)} << flush;
+               fmt::println(clog, "Received {} bytes.", recvd);
+            fmt::println(cout, "{}", std::string_view{buffer, static_cast<std::size_t>(recvd)});
+            cout.flush();
          } else {
             if (verbose) {
                auto msg = errno_to_string();
-               clog << "recvfrom returned " << recvd << ": " << msg << endl;
+               fmt::println(clog, "recvfrom() returned {}: {}", recvd, msg);
             }
          }
       }
 
       if (interrupted) {
          if (verbose)
-            clog << "\nInterrupted." << endl;
+            fmt::println(clog, "\nInterrupted.");
          else
-            clog << '\n';
+            fmt::println(clog, "");
          running = false;
       }
    }

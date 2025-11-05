@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 
       options = parser.parse(argc, argv);
    } catch (std::exception &ex) {
-      cerr << "Error parsing options: " << ex.what() << endl;
+      fmt::println(cerr, "Error parsing options: {}", ex.what());
       return EXIT_FAILURE;
    }
 
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
    }
 
    if (options.has("version")) {
-      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::print(cout, "{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return EXIT_SUCCESS;
    }
 
@@ -207,6 +207,4 @@ int main(int argc, char **argv) {
    romfs::CreateArchive(root, outputPath.c_str());
 
    delete root;
-
-   return EXIT_SUCCESS;
 }
