@@ -244,34 +244,33 @@ void
 printHeader(const Rpl &rpl)
 {
    const auto &header = rpl.header;
-   fmt::print("{}", header.magic);
-   fmt::print("ElfHeader\n");
-   fmt::print("  {:<20} = 0x{:08X}\n",    "magic",      header.magic.value());
-   fmt::print("  {:<20} = {}\n",          "fileClass",  header.fileClass);
-   fmt::print("  {:<20} = {}\n",          "encoding",   header.encoding);
-   fmt::print("  {:<20} = {}\n",          "elfVersion", header.elfVersion);
-   fmt::print("  {:<20} = {} 0x{:04x}\n", "abi",        formatEABI(header.abi), header.abi.value());
-   fmt::print("  {:<20} = {} 0x{:04X}\n", "type",       formatET(header.type), header.type.value());
-   fmt::print("  {:<20} = {} {}\n",       "machine",    formatEM(header.machine), header.machine);
-   fmt::print("  {:<20} = 0x{:X}\n",      "version",    header.version.value());
-   fmt::print("  {:<20} = 0x{:08X}\n",    "entry",      header.entry.value());
-   fmt::print("  {:<20} = 0x{:X}\n",      "phoff",      header.phoff.value());
-   fmt::print("  {:<20} = 0x{:X}\n",      "shoff",      header.shoff.value());
-   fmt::print("  {:<20} = 0x{:X}\n",      "flags",      header.flags.value());
-   fmt::print("  {:<20} = {}\n",          "ehsize",     header.ehsize);
-   fmt::print("  {:<20} = {}\n",          "phentsize",  header.phentsize);
-   fmt::print("  {:<20} = {}\n",          "phnum",      header.phnum);
-   fmt::print("  {:<20} = {}\n",          "shentsize",  header.shentsize);
-   fmt::print("  {:<20} = {}\n",          "shnum",      header.shnum);
-   fmt::print("  {:<20} = {}\n",          "shstrndx",   header.shstrndx);
+   fmt::println("ElfHeader");
+   fmt::println("  {:<20} = 0x{:08X}",    "magic",      header.magic.value());
+   fmt::println("  {:<20} = {}",          "fileClass",  unsigned{header.fileClass});
+   fmt::println("  {:<20} = {}",          "encoding",   unsigned{header.encoding});
+   fmt::println("  {:<20} = {}",          "elfVersion", unsigned{header.elfVersion});
+   fmt::println("  {:<20} = {} 0x{:04x}", "abi",        formatEABI(header.abi), header.abi.value());
+   fmt::println("  {:<20} = {} 0x{:04X}", "type",       formatET(header.type), header.type.value());
+   fmt::println("  {:<20} = {} {}",       "machine",    formatEM(header.machine), header.machine);
+   fmt::println("  {:<20} = 0x{:X}",      "version",    header.version.value());
+   fmt::println("  {:<20} = 0x{:08X}",    "entry",      header.entry.value());
+   fmt::println("  {:<20} = 0x{:X}",      "phoff",      header.phoff.value());
+   fmt::println("  {:<20} = 0x{:X}",      "shoff",      header.shoff.value());
+   fmt::println("  {:<20} = 0x{:X}",      "flags",      header.flags.value());
+   fmt::println("  {:<20} = {}",          "ehsize",     header.ehsize);
+   fmt::println("  {:<20} = {}",          "phentsize",  header.phentsize);
+   fmt::println("  {:<20} = {}",          "phnum",      header.phnum);
+   fmt::println("  {:<20} = {}",          "shentsize",  header.shentsize);
+   fmt::println("  {:<20} = {}",          "shnum",      header.shnum);
+   fmt::println("  {:<20} = {}",          "shstrndx",   header.shstrndx);
 }
 
 void
 printSectionSummary(const Rpl &rpl)
 {
-   fmt::print("Sections:\n");
-   fmt::print(
-      "  {:<4} {:<20} {:<16} {:<8} {:<6} {:<6} {:<2} {:<4} {:<2} {:<4} {:<5}\n",
+   fmt::println("Sections:");
+   fmt::println(
+      "  {:<4} {:<20} {:<16} {:<8} {:<6} {:<6} {:<2} {:<4} {:<2} {:<4} {:<5}",
       "[Nr]", "Name", "Type", "Addr", "Off", "Size", "ES", "Flag", "Lk", "Info", "Align");
 
    for (auto i = 0u; i < rpl.sections.size(); ++i) {
@@ -279,8 +278,8 @@ printSectionSummary(const Rpl &rpl)
       auto type = formatSHT(section.header.type);
       auto flags = formatSHF(section.header.flags);
 
-      fmt::print(
-         "  [{:>2}] {:<20} {:<16} {:08X} {:06X} {:06X} {:02X} {:>4} {:>2} {:>4} {:>5}\n",
+      fmt::println(
+         "  [{:>2}] {:<20} {:<16} {:08X} {:06X} {:06X} {:02X} {:>4} {:>2} {:>4} {:>5}",
          i,
          section.name,
          type,
@@ -300,41 +299,41 @@ printFileInfo(const Rpl &rpl,
               const Section &section)
 {
    auto &info = *reinterpret_cast<const elf::RplFileInfo *>(section.data.data());
-   fmt::print("  {:<20} = 0x{:08X}\n", "version",        info.version.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "textSize",       info.textSize.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "textAlign",      info.textAlign.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "dataSize",       info.dataSize.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "dataAlign",      info.dataAlign.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "loadSize",       info.loadSize.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "loadAlign",      info.loadAlign.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "tempSize",       info.tempSize.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "trampAdjust",    info.trampAdjust.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "trampAddition",  info.trampAddition.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "sdaBase",        info.sdaBase.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "sda2Base",       info.sda2Base.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "stackSize",      info.stackSize.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "heapSize",       info.heapSize.value());
+   fmt::println("  {:<20} = 0x{:08X}", "version",        info.version.value());
+   fmt::println("  {:<20} = 0x{:08X}", "textSize",       info.textSize.value());
+   fmt::println("  {:<20} = 0x{:X}",   "textAlign",      info.textAlign.value());
+   fmt::println("  {:<20} = 0x{:08X}", "dataSize",       info.dataSize.value());
+   fmt::println("  {:<20} = 0x{:X}",   "dataAlign",      info.dataAlign.value());
+   fmt::println("  {:<20} = 0x{:08X}", "loadSize",       info.loadSize.value());
+   fmt::println("  {:<20} = 0x{:X}",   "loadAlign",      info.loadAlign.value());
+   fmt::println("  {:<20} = 0x{:X}",   "tempSize",       info.tempSize.value());
+   fmt::println("  {:<20} = 0x{:X}",   "trampAdjust",    info.trampAdjust.value());
+   fmt::println("  {:<20} = 0x{:X}",   "trampAddition",  info.trampAddition.value());
+   fmt::println("  {:<20} = 0x{:08X}", "sdaBase",        info.sdaBase.value());
+   fmt::println("  {:<20} = 0x{:08X}", "sda2Base",       info.sda2Base.value());
+   fmt::println("  {:<20} = 0x{:08X}", "stackSize",      info.stackSize.value());
+   fmt::println("  {:<20} = 0x{:08X}", "heapSize",       info.heapSize.value());
 
    if (info.filename) {
       auto filename = section.data.data() + info.filename;
-      fmt::print("  {:<20} = {}\n",    "filename",       filename);
+      fmt::println("  {:<20} = {}",    "filename",       filename);
    } else {
-      fmt::print("  {:<20} = 0\n",     "filename");
+      fmt::println("  {:<20} = 0",     "filename");
    }
 
-   fmt::print("  {:<20} = 0x{:X}\n",   "flags",               info.flags.value());
-   fmt::print("  {:<20} = 0x{:08X}\n", "minSdkVersion",       info.minVersion.value());
-   fmt::print("  {:<20} = {}\n",       "compressionLevel",    info.compressionLevel.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "fileInfoPad",         info.fileInfoPad.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "sdkVersion",          info.cafeSdkVersion.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "sdkRevision",         info.cafeSdkRevision.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "tlsModuleIndex",      info.tlsModuleIndex.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "tlsAlignShift",       info.tlsAlignShift.value());
-   fmt::print("  {:<20} = 0x{:X}\n",   "runtimeFileInfoSize", info.runtimeFileInfoSize.value());
+   fmt::println("  {:<20} = 0x{:X}",   "flags",               info.flags.value());
+   fmt::println("  {:<20} = 0x{:08X}", "minSdkVersion",       info.minVersion.value());
+   fmt::println("  {:<20} = {}",       "compressionLevel",    info.compressionLevel.value());
+   fmt::println("  {:<20} = 0x{:X}",   "fileInfoPad",         info.fileInfoPad.value());
+   fmt::println("  {:<20} = 0x{:X}",   "sdkVersion",          info.cafeSdkVersion.value());
+   fmt::println("  {:<20} = 0x{:X}",   "sdkRevision",         info.cafeSdkRevision.value());
+   fmt::println("  {:<20} = 0x{:X}",   "tlsModuleIndex",      info.tlsModuleIndex.value());
+   fmt::println("  {:<20} = 0x{:X}",   "tlsAlignShift",       info.tlsAlignShift.value());
+   fmt::println("  {:<20} = 0x{:X}",   "runtimeFileInfoSize", info.runtimeFileInfoSize.value());
 
    if (info.tagOffset) {
       const char *tags = section.data.data() + info.tagOffset;
-      fmt::print("  Tags:\n");
+      fmt::println("  Tags:");
 
       while (*tags) {
          auto key = tags;
@@ -342,7 +341,7 @@ printFileInfo(const Rpl &rpl,
          auto value = tags;
          tags += strlen(tags) + 1;
 
-         fmt::print("    \"{}\" = \"{}\"\n", key, value);
+         fmt::println("    \"{}\" = \"{}\"", key, value);
       }
    }
 }
@@ -371,8 +370,8 @@ printRela(const Rpl &rpl,
       auto symbol = symbols[index];
       auto name = reinterpret_cast<const char*>(symStrTab.data.data()) + symbol.name;
 
-      fmt::print(
-         "  {:08X} {:08X} {:<16} {:08X} {} + {:X}\n",
+      fmt::println(
+         "  {:08X} {:08X} {:<16} {:08X} {} + {:X}",
          rela.offset.value(),
          rela.info.value(),
          typeName,
@@ -406,8 +405,8 @@ printSymTab(const Rpl &rpl,
       auto bindingName = formatSymBinding(binding);
       auto ndx = formatSymShndx(symbol.shndx);
 
-      fmt::print(
-         "  {:>4} {:08X} {:>6} {:<8} {:<8} {:>3} {}\n",
+      fmt::println(
+         "  {:>4} {:08X} {:>6} {:<8} {:<8} {:>3} {}",
          id,
          symbol.value.value(),
          symbol.size,
@@ -426,9 +425,9 @@ printRplImports(const Rpl &rpl,
 {
    auto sectionIndex = getSectionIndex(rpl, section);
    auto import = reinterpret_cast<const elf::RplImport *>(section.data.data());
-   fmt::print("  {:<20} = {}\n", "name", import->name);
-   fmt::print("  {:<20} = 0x{:08X}\n", "signature", import->signature.value());
-   fmt::print("  {:<20} = {}\n", "count", import->count);
+   fmt::println("  {:<20} = {}", "name", import->name);
+   fmt::println("  {:<20} = 0x{:08X}", "signature", import->signature.value());
+   fmt::println("  {:<20} = {}", "count", import->count);
 
    if (import->count) {
       for (auto &symSection : rpl.sections) {
@@ -446,7 +445,7 @@ printRplImports(const Rpl &rpl,
 
             if (symbol.shndx == sectionIndex &&
                (type == elf::STT_FUNC || type == elf::STT_OBJECT)) {
-               fmt::print("    {}\n", strTab + symbol.name);
+               fmt::println("    {}", strTab + symbol.name);
             }
          }
       }
@@ -461,7 +460,7 @@ printRplCrcs(const Rpl &rpl,
    auto count = section.data.size() / sizeof(elf::RplCrc);
 
    for (auto i = 0u; i < count; ++i) {
-      fmt::print("  [{:>2}] 0x{:08X} {}\n", i, crcs[i].crc.value(), section.name);
+      fmt::println("  [{:>2}] 0x{:08X} {}", i, crcs[i].crc.value(), section.name);
    }
 }
 
@@ -471,14 +470,14 @@ printRplExports(const Rpl &rpl,
 {
    auto exports = reinterpret_cast<const elf::RplExport *>(section.data.data());
    auto strTab = section.data.data();
-   fmt::print("  {:<20} = 0x{:08X}\n", "signature", exports->signature.value());
-   fmt::print("  {:<20} = {}\n", "count", exports->count);
+   fmt::println("  {:<20} = 0x{:08X}", "signature", exports->signature.value());
+   fmt::println("  {:<20} = {}", "count", exports->count);
 
    for (auto i = 0u; i < exports->count; ++i) {
       // TLS exports have the high bit set in name for some unknown reason...
       auto name = strTab + (exports->exports[i].name & 0x7FFFFFFF);
       auto value = exports->exports[i].value;
 
-      fmt::print("    0x{:08X} {}\n", value.value(), name);
+      fmt::println("    0x{:08X} {}", value.value(), name);
    }
 }

@@ -22,24 +22,24 @@ sValidateRelocsAddTable(const Rpl &rpl,
    }
 
    if (entsize < sizeof(elf::Rela)) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0002E);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0002E);
       return false;
    }
 
    auto numRelas = (header.size / entsize);
    if (!numRelas) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0000A);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0000A);
       return false;
    }
 
    if (!header.link || header.link >= rpl.header.shnum) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0000B);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0000B);
       return false;
    }
 
    const auto &symbolSection = rpl.sections[header.link];
    if (symbolSection.header.type != elf::SHT_SYMTAB) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0000C);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0000C);
       return false;
    }
 
@@ -47,12 +47,12 @@ sValidateRelocsAddTable(const Rpl &rpl,
                      static_cast<uint32_t>(symbolSection.header.entsize) :
                      static_cast<uint32_t>(sizeof(elf::Symbol));
    if (symEntsize < sizeof(elf::Symbol)) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0002F);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0002F);
       return false;
    }
 
    if (header.info >= rpl.header.shnum) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0000D);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0000D);
       return false;
    }
 
@@ -62,7 +62,7 @@ sValidateRelocsAddTable(const Rpl &rpl,
       for (auto i = 0u; i < numRelas; ++i) {
          auto rela = reinterpret_cast<const elf::Rela *>(section.data.data() + i * entsize);
          if (rela->info && (rela->info >> 8) >= numSymbols) {
-            fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0000F);
+            fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0000F);
             return false;
          }
       }
@@ -84,13 +84,13 @@ sValidateSymbolTable(const Rpl &rpl,
    const Section *symStrTabSection = nullptr;
    if (header.link) {
       if (header.link >= rpl.header.shnum) {
-         fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00001);
+         fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00001);
          return false;
       }
 
       symStrTabSection = &rpl.sections[header.link];
       if (symStrTabSection->header.type != elf::SHT_STRTAB) {
-         fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00002);
+         fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00002);
          return false;
       }
    }
@@ -99,13 +99,13 @@ sValidateSymbolTable(const Rpl &rpl,
                   static_cast<uint32_t>(header.entsize) :
                   static_cast<uint32_t>(sizeof(elf::Symbol));
    if (entsize < sizeof(elf::Symbol)) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0002D);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0002D);
       return false;
    }
 
    auto numSymbols = header.size / entsize;
    if (!numSymbols) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00003);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00003);
       result = false;
    }
 
@@ -114,7 +114,7 @@ sValidateSymbolTable(const Rpl &rpl,
 
       if (symStrTabSection &&
           symbol->name > symStrTabSection->data.size()) {
-         fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00004);
+         fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00004);
       }
 
       auto type = symbol->info & 0xF;
@@ -123,7 +123,7 @@ sValidateSymbolTable(const Rpl &rpl,
           type != elf::STT_SECTION &&
           type != elf::STT_FILE) {
          if (symbol->shndx >= rpl.header.shnum) {
-            fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00005);
+            fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00005);
             result = false;
          } else if (type == elf::STT_OBJECT) {
             const auto &targetSection = rpl.sections[symbol->shndx];
@@ -134,13 +134,13 @@ sValidateSymbolTable(const Rpl &rpl,
             if (targetSectionSize &&
                 targetSection.header.flags & elf::SHF_ALLOC) {
                if (targetSection.header.type == elf::SHT_NULL) {
-                  fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00006);
+                  fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00006);
                   result = false;
                }
 
                auto position = symbol->value - targetSection.header.addr;
                if (position > targetSectionSize || position + symbol->size > targetSectionSize) {
-                  fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00007);
+                  fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00007);
                   result = false;
                }
             }
@@ -153,13 +153,13 @@ sValidateSymbolTable(const Rpl &rpl,
             if (targetSectionSize &&
                 targetSection.header.flags & elf::SHF_ALLOC) {
                if (targetSection.header.type == elf::SHT_NULL) {
-                  fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00008);
+                  fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00008);
                   result = false;
                }
 
                auto position = symbol->value - targetSection.header.addr;
                if (position > targetSectionSize || position + symbol->size > targetSectionSize) {
-                  fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00009);
+                  fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00009);
                   result = false;
                }
             }
@@ -180,39 +180,39 @@ verifyFile(const Rpl &rpl)
    auto result = true;
 
    if (rpl.fileSize < 0x104) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00018);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00018);
       return false;
    }
 
    if (header.magic != elf::HeaderMagic) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00019);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00019);
       result = false;
    }
 
    if (header.fileClass != elf::ELFCLASS32) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0001A);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0001A);
       result = false;
    }
 
    if (header.elfVersion > elf::EV_CURRENT) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0001B);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0001B);
       result = false;
    }
 
    if (!header.machine) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0001C);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0001C);
       result = false;
    }
 
-   if (!header.version != 1) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0001D);
+   if (header.version != 1) {
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0001D);
       result = false;
    }
 
    auto ehsize = static_cast<uint32_t>(header.ehsize);
    if (ehsize) {
       if (header.ehsize < sizeof(elf::Header)) {
-         fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0001E);
+         fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0001E);
          result = false;
       }
    } else {
@@ -221,18 +221,18 @@ verifyFile(const Rpl &rpl)
 
    auto phoff = header.phoff;
    if (phoff && (phoff < ehsize || phoff >= rpl.fileSize)) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0001F);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0001F);
       result = false;
    }
 
    auto shoff = header.shoff;
    if (shoff && (shoff < ehsize || shoff >= rpl.fileSize)) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00020);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00020);
       result = false;
    }
 
    if (header.shstrndx && header.shstrndx >= header.shnum) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00021);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00021);
       result = false;
    }
 
@@ -241,7 +241,7 @@ verifyFile(const Rpl &rpl)
                     static_cast<uint16_t>(32);
    if (header.phoff &&
        (header.phoff + phentsize * header.phnum) > rpl.fileSize) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00022);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00022);
       result = false;
    }
 
@@ -250,7 +250,7 @@ verifyFile(const Rpl &rpl)
                     static_cast<uint32_t>(sizeof(elf::SectionHeader));
    if (header.shoff &&
       (header.shoff + shentsize * header.shnum) > rpl.fileSize) {
-      fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00023);
+      fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00023);
       result = false;
    }
 
@@ -258,13 +258,13 @@ verifyFile(const Rpl &rpl)
       if (section.header.size &&
           section.header.type != elf::SHT_NOBITS) {
          if (section.header.offset < ehsize) {
-            fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00024);
+            fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00024);
             result = false;
          }
 
          if (section.header.offset >= shoff &&
              section.header.offset < (shoff + header.shnum * shentsize)) {
-            fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD00027);
+            fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00027);
             result = false;
          }
       }
@@ -273,12 +273,12 @@ verifyFile(const Rpl &rpl)
    if (header.shstrndx) {
       const auto &shStrTabSection = rpl.sections[header.shstrndx];
       if (shStrTabSection.header.type != elf::SHT_STRTAB) {
-         fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0002A);
+         fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0002A);
          result = false;
       } else {
          for (auto &section : rpl.sections) {
             if (section.header.name >= shStrTabSection.data.size()) {
-               fmt::print(cerr, "*** Failed ELF file checks (err=0x{:08X})\n", 0xBAD0002B);
+               fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD0002B);
                result = false;
             }
          }
@@ -327,8 +327,9 @@ verifyCrcs(const Rpl &rpl)
       }
 
       if (crc != crcs[sectionIndex].crc) {
-         fmt::print(cerr, "Unexpected crc for section {}, read 0x{:08X} but calculated 0x{:08X}",
-                    sectionIndex, crcs[sectionIndex].crc.value(), crc);
+         fmt::println(cerr,
+                      "Unexpected crc for section {}, read 0x{:08X} but calculated 0x{:08X}",
+                      sectionIndex, crcs[sectionIndex].crc.value(), crc);
          result = false;
       }
 
@@ -408,73 +409,74 @@ verifyFileBounds(const Rpl &rpl)
    }
 
    if (dataMin < rpl.header.shoff) {
-      fmt::print(cerr, "*** SecHrs, FileInfo, or CRCs in bad spot in file. Return %d.\n", -470026);
+      fmt::println(cerr,
+                   "*** SecHrs, FileInfo, or CRCs in bad spot in file. Return {}.", -470026);
       result = false;
    }
 
    // Data
    if (dataMin > dataMax) {
-      fmt::print(cerr, "*** DataMin > DataMax. break.\n");
+      fmt::println(cerr, "*** DataMin > DataMax. break.");
       result = false;
    }
 
    if (dataMin > readMin) {
-      fmt::print("*** DataMin > ReadMin. break.\n");
+      fmt::println(cerr, "*** DataMin > ReadMin. break.");
       result = false;
    }
 
    if (dataMax > readMin) {
-      fmt::print("*** DataMax > ReadMin, break.\n");
+      fmt::println(cerr, "*** DataMax > ReadMin, break.");
       result = false;
    }
 
    // Read
    if (readMin > readMax) {
-      fmt::print("*** ReadMin > ReadMax. break.\n");
+      fmt::println(cerr, "*** ReadMin > ReadMax. break.");
       result = false;
    }
 
    if (readMin > textMin) {
-      fmt::print("*** ReadMin > TextMin. break.\n");
+      fmt::println(cerr, "*** ReadMin > TextMin. break.");
       result = false;
    }
 
    if (readMax > textMin) {
-      fmt::print("*** ReadMax > TextMin. break.\n");
+      fmt::println(cerr, "*** ReadMax > TextMin. break.");
       result = false;
    }
 
    // Text
    if (textMin > textMax) {
-      fmt::print("*** TextMin > TextMax. break.\n");
+      fmt::println(cerr, "*** TextMin > TextMax. break.");
       result = false;
    }
 
    if (textMin > tempMin) {
-      fmt::print("*** TextMin > TempMin. break.\n");
+      fmt::println(cerr, "*** TextMin > TempMin. break.");
       result = false;
    }
 
    if (textMax > tempMin) {
-      fmt::print("*** TextMax > TempMin. break.\n");
+      fmt::println(cerr, "*** TextMax > TempMin. break.");
       result = false;
    }
 
    // Temp
    if (tempMin > tempMax) {
-      fmt::print("*** TempMin > TempMax. break.\n");
+      fmt::println(cerr, "*** TempMin > TempMax. break.");
       result = false;
    }
 
    if (!result) {
-      fmt::print(cerr, "dataMin = 0x{:08X}\n", dataMin);
-      fmt::print(cerr, "dataMax = 0x{:08X}\n", dataMax);
-      fmt::print(cerr, "readMin = 0x{:08X}\n", readMin);
-      fmt::print(cerr, "readMax = 0x{:08X}\n", readMax);
-      fmt::print(cerr, "textMin = 0x{:08X}\n", textMin);
-      fmt::print(cerr, "textMax = 0x{:08X}\n", textMax);
-      fmt::print(cerr, "tempMin = 0x{:08X}\n", tempMin);
-      fmt::print(cerr, "tempMax = 0x{:08X}\n", tempMax);
+      fmt::println(cerr, "dataMin = 0x{:08X}", dataMin);
+      fmt::println(cerr, "dataMax = 0x{:08X}", dataMax);
+      fmt::println(cerr, "readMin = 0x{:08X}", readMin);
+      fmt::println(cerr, "readMax = 0x{:08X}", readMax);
+      fmt::println(cerr, "textMin = 0x{:08X}", textMin);
+      fmt::println(cerr, "textMax = 0x{:08X}", textMax);
+      fmt::println(cerr, "tempMin = 0x{:08X}", tempMin);
+      fmt::println(cerr, "tempMax = 0x{:08X}", tempMax);
    }
 
    return result;
@@ -533,7 +535,7 @@ verifyRelocationTypes(const Rpl &rpl)
          default:
             // Only print error once per type
             if (!unsupportedTypes.contains(type)) {
-               fmt::print(cerr, "Unsupported relocation type {}\n", type);
+               fmt::println(cerr, "Unsupported relocation type {}", type);
                unsupportedTypes.insert(type);
             }
          }
@@ -553,10 +555,10 @@ verifySectionAlignment(const Rpl &rpl)
    auto result = true;
    for (auto &section : rpl.sections) {
       if (!align_check(section.header.addr, section.header.addralign)) {
-         fmt::print(cerr, "Unaligned section {}, addr {}, addralign {}",
-                    getSectionIndex(rpl, section),
-                    section.header.addr,
-                    section.header.addralign);
+         fmt::println(cerr, "Unaligned section {}, addr {}, addralign {}",
+                      getSectionIndex(rpl, section),
+                      section.header.addr,
+                      section.header.addralign);
          result = false;
       }
    }
@@ -573,16 +575,16 @@ verifySectionOrder(const Rpl &rpl)
 
    if (lastSection.header.type != elf::SHT_RPL_FILEINFO ||
       (lastSection.header.flags & elf::SHF_DEFLATED)) {
-      fmt::print("***shnum-1 section type = 0x{:08X}, flags=0x{:08X}\n",
-                 lastSection.header.type.value(),
-                 lastSection.header.flags.value());
+      fmt::println(cerr, "***shnum-1 section type = 0x{:08X}, flags=0x{:08X}",
+                   lastSection.header.type.value(),
+                   lastSection.header.flags.value());
    }
 
    if (penultimateSection.header.type != elf::SHT_RPL_CRCS ||
       (penultimateSection.header.flags & elf::SHF_DEFLATED)) {
-      fmt::print("***shnum-2 section type = 0x{:08X}, flags=0x{:08X}\n",
-                 penultimateSection.header.type.value(),
-                 penultimateSection.header.flags.value());
+      fmt::println(cerr, "***shnum-2 section type = 0x{:08X}, flags=0x{:08X}",
+                   penultimateSection.header.type.value(),
+                   penultimateSection.header.flags.value());
    }
 
    return true;

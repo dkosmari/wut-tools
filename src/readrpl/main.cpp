@@ -16,7 +16,6 @@
 
 using std::cerr;
 using std::cout;
-using std::endl;
 
 enum ErrorCodes {
    ERROR_BAD_ARGUMENTS = 1,
@@ -81,7 +80,7 @@ readSection(std::ifstream &fh,
       ret = inflateInit(&stream);
 
       if (ret != Z_OK) {
-         fmt::print(cerr, "Couldn't decompress .rpx section because inflateInit returned {}\n", ret);
+         fmt::println(cerr, "Couldn't decompress .rpx section because inflateInit returned {}", ret);
          section.data.clear();
          return false;
       } else {
@@ -97,7 +96,7 @@ readSection(std::ifstream &fh,
          ret = inflate(&stream, Z_FINISH);
 
          if (ret != Z_OK && ret != Z_STREAM_END) {
-            fmt::print(cerr, "Couldn't decompress .rpx section because inflate returned {}\n", ret);
+            fmt::println(cerr, "Couldn't decompress .rpx section because inflate returned {}", ret);
             section.data.clear();
             return false;
          }
@@ -118,9 +117,9 @@ show_help(std::ostream& out,
           const excmd::parser& parser,
           const std::string& exec_name)
 {
-   fmt::print(out, "{} [options] path\n", exec_name);
-   fmt::print(out, "{}\n", parser.format_help(exec_name));
-   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+   fmt::println(out, "{} [options] path", exec_name);
+   fmt::println(out, "{}", parser.format_help(exec_name));
+   fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char **argv)
@@ -165,7 +164,7 @@ int main(int argc, char **argv)
 
       options = parser.parse(argc, argv);
    } catch (std::exception& ex) {
-      cerr << "Error parsing options: " << ex.what() << endl;
+      fmt::println(cerr, "Error parsing options: {}", ex.what());
       return ERROR_BAD_ARGUMENTS;
    }
 
@@ -175,18 +174,18 @@ int main(int argc, char **argv)
    }
 
    if (options.has("version")) {
-      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println("{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return 0;
    }
 
    if (options.empty()) {
-      cerr << "No option provided.\n";
+      fmt::println(cerr, "No option provided.");
       show_help(cerr, parser, argv[0]);
       return ERROR_BAD_ARGUMENTS;
    }
 
    if (!options.has("path")) {
-      cerr << "Error: path argument is mandatory.\n";
+      fmt::println(cerr, "Error: path argument is mandatory.");
       show_help(cerr, parser, argv[0]);
       return ERROR_BAD_ARGUMENTS;
    }
@@ -213,7 +212,7 @@ int main(int argc, char **argv)
    // Read file
    std::ifstream fh { path, std::ifstream::binary };
    if (!fh.is_open()) {
-       fmt::print(cerr, "Could not open {} for reading\n", path);
+       fmt::println(cerr, "Could not open \"{}\" for reading", path);
       return ERROR_OPEN_INPUT;
    }
 
@@ -221,7 +220,7 @@ int main(int argc, char **argv)
    fh.read(reinterpret_cast<char*>(&rpl.header), sizeof(elf::Header));
 
    if (rpl.header.magic != elf::HeaderMagic) {
-      cerr << "Invalid ELF magic header\n";
+      fmt::println(cerr, "Invalid ELF magic header");
       return ERROR_BAD_INPUT;
    }
 
@@ -231,7 +230,7 @@ int main(int argc, char **argv)
       fh.seekg(rpl.header.shoff + rpl.header.shentsize * i);
 
       if (!readSection(fh, section, i)) {
-         fmt::print("Error reading section {}", i);
+         fmt::println("Error reading section {}", i);
          return ERROR_BAD_INPUT;
       }
 
@@ -265,8 +264,8 @@ int main(int argc, char **argv)
    for (auto i = 0u; i < rpl.sections.size(); ++i) {
       auto &section = rpl.sections[i];
       auto printSectionHeader = [&](){
-         fmt::print(
-            "Section {}: {}, {}, {} bytes\n",
+         fmt::println(
+            "Section {}: {}, {}, {} bytes",
             i, formatSHT(section.header.type), section.name, section.data.size());
       };
 

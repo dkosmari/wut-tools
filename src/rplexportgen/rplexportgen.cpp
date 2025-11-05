@@ -22,7 +22,6 @@
 
 using std::cout;
 using std::cerr;
-using std::endl;
 
 /*
 .extern __preinit_user
@@ -61,37 +60,37 @@ writeExports(std::ofstream &out,
 
    // Write out .extern to declare the symbols
    for (const auto &name : exports) {
-      out << ".extern " << name << '\n';
+      fmt::println(out, ".extern {}", name);
    }
-   out << '\n';
+   fmt::print(out, "\n");
 
    // Write out header
    if (isData) {
-      out << ".section .dexports, \"a\", @0x80000001\n";
+      fmt::println(out, ".section .dexports, \"a\", @0x80000001");
    } else {
-      out << ".section .fexports, \"ax\", @0x80000001\n";
+      fmt::println(out, ".section .fexports, \"ax\", @0x80000001");
    }
 
-   out << ".align 4\n\n";
+   fmt::println(out, ".align 4\n");
 
-   out << ".long " << exports.size() << '\n';
-   out << ".long 0x" << std::hex << signature << "\n\n";
+   fmt::println(out, ".long {}", exports.size());
+   fmt::println(out, ".long 0x{:x}\n", signature);
 
    // Write out each export
    auto nameOffset = 8 + 8 * exports.size();
    for (const auto &name : exports) {
-      out << ".long " << name << '\n';
-      out << ".long 0x" << std::hex << nameOffset << '\n';
+      fmt::println(out, ".long {}", name);
+      fmt::println(out, ".long 0x{:x}", nameOffset);
       nameOffset += name.size() + 1;
    }
-   out << '\n';
+   fmt::print(out, "\n");
 
    // Write out the strings
    for (const auto &name : exports) {
-      out << ".string \"" << name << "\"\n";
+      fmt::println(out, ".string \"{}\"", name);
       nameOffset += name.size() + 1;
    }
-   out << '\n';
+   fmt::print(out, "\n");
 }
 
 static void
@@ -99,9 +98,9 @@ show_help(std::ostream& out,
           const excmd::parser& parser,
           const std::string& exec_name)
 {
-   fmt::print(out, "{} [options] <exports.def> <output.S>\n", exec_name);
-   fmt::print(out, "{}\n", parser.format_help(exec_name));
-   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+   fmt::println(out, "{} [options] <exports.def> <output.S>", exec_name);
+   fmt::println(out, "{}", parser.format_help(exec_name));
+   fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char **argv)
@@ -131,7 +130,7 @@ int main(int argc, char **argv)
       options = parser.parse(argc, argv);
    }
    catch (std::exception& ex) {
-      cerr << "Error parsing options: " << ex.what() << endl;
+      fmt::println(cerr, "Error parsing options: {}", ex.what());
       return -1;
    }
 
@@ -141,12 +140,12 @@ int main(int argc, char **argv)
    }
 
    if (options.has("version")) {
-      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println("{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return 0;
    }
 
    if (!options.has("<exports.def>") || !options.has("<output.S>")) {
-      cerr << "Missing mandatory arguments: <exports.def> <output.S>.\n";
+      fmt::println(cerr, "Missing mandatory arguments: <exports.def> <output.S>");
       show_help(cerr, parser, argv[0]);
       return -1;
    }
@@ -156,7 +155,7 @@ int main(int argc, char **argv)
       std::ifstream in{src};
 
       if (!in.is_open()) {
-         std::cout << "Could not open file " << src << " for reading" << std::endl;
+         fmt::println(cerr, "Could not open file \"{}\" for reading.", src);
          return -1;
       }
 
@@ -185,7 +184,7 @@ int main(int argc, char **argv)
             } else if (line.substr(1, 4) == "NAME") {
                readMode = ReadMode::NAME;
             } else {
-               cerr << "Unexpected section type" << endl;
+               fmt::println(cerr, "Unexpected section type: \"{}\"", line.substr(1));
                return -1;
             }
             continue;
@@ -198,7 +197,7 @@ int main(int argc, char **argv)
          } else if (readMode == ReadMode::NAME) {
             // We can ignore name in rplexportgen
          } else {
-            cerr << "Unexpected section data" << endl;
+            fmt::println(cerr, "Unexpected section data.");
             return -1;
          }
       }
@@ -213,7 +212,7 @@ int main(int argc, char **argv)
       std::ofstream out{dst};
 
       if (!out.is_open()) {
-         cerr << "Could not open file " << dst << " for writing" << endl;
+         fmt::println(cerr, "Could not open file \"{}\" for writing.", dst);
          return -1;
       }
 

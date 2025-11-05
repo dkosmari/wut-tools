@@ -20,7 +20,6 @@
 using std::cerr;
 using std::clog;
 using std::cout;
-using std::endl;
 
 constexpr auto DeflateMinSectionSize = 0x18u;
 constexpr auto CodeBaseAddress = 0x02000000u;
@@ -914,9 +913,9 @@ show_help(std::ostream& out,
           const excmd::parser& parser,
           const std::string& exec_name)
 {
-   fmt::print(out, "{} [options] src dst\n", exec_name);
-   fmt::print(out, "{}\n", parser.format_help(exec_name));
-   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+   fmt::println(out, "{} [options] src dst", exec_name);
+   fmt::println(out, "{}", parser.format_help(exec_name));
+   fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char **argv)
@@ -945,7 +944,7 @@ int main(int argc, char **argv)
 
       options = parser.parse(argc, argv);
    } catch (std::exception& ex) {
-      cerr << "Error parsing options: " << ex.what() << endl;
+      fmt::println(cerr, "Error parsing options: {}", ex.what());
       return -1;
    }
 
@@ -955,12 +954,12 @@ int main(int argc, char **argv)
    }
 
    if (options.has("version")) {
-      fmt::print("{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println("{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return 0;
    }
 
    if (!options.has("src") || !options.has("dst")) {
-      cerr << "Missing mandatory arguments: src dst.\n";
+      fmt::println(cerr, "Missing mandatory arguments: src dst");
       show_help(cerr, parser, argv[0]);
       return -1;
    }
@@ -973,52 +972,52 @@ int main(int argc, char **argv)
    ElfFile elf;
 
    if (!readElf(elf, src)) {
-      fmt::print(cerr, "ERROR: readElf failed.\n");
+      fmt::println(cerr, "ERROR: readElf failed.");
       return -1;
    }
 
    if (!fixRelocations(elf)) {
-      fmt::print("ERROR: fixRelocations failed.\n");
+      fmt::println("ERROR: fixRelocations failed.");
       return -1;
    }
 
    if (!renameRplWrap(elf)) {
-      fmt::print(cerr, "ERROR: renameRplWrap failed.\n");
+      fmt::println(cerr, "ERROR: renameRplWrap failed.");
       return -1;
    }
 
    if (!fixLoaderVirtualAddresses(elf)) {
-      fmt::print(cerr, "ERROR: fixLoaderVirtualAddresses failed.\n");
+      fmt::println(cerr, "ERROR: fixLoaderVirtualAddresses failed.");
       return -1;
    }
 
    if (!generateFileInfoSection(elf, isRpl ? 0 : elf::RPL_IS_RPX)) {
-      fmt::print(cerr, "ERROR: generateFileInfoSection failed.\n");
+      fmt::println(cerr, "ERROR: generateFileInfoSection failed.");
       return -1;
    }
 
    if (!generateCrcSection(elf)) {
-      fmt::print(cerr, "ERROR: generateCrcSection failed.\n");
+      fmt::println(cerr, "ERROR: generateCrcSection failed.");
       return -1;
    }
 
    if (!fixFileHeader(elf)) {
-      fmt::print(cerr, "ERROR: fixFileHeader failed.\n");
+      fmt::println(cerr, "ERROR: fixFileHeader failed.");
       return -1;
    }
 
    if (!deflateSections(elf)) {
-      fmt::print(cerr, "ERROR: deflateSections failed.\n");
+      fmt::println(cerr, "ERROR: deflateSections failed.");
       return -1;
    }
 
    if (!calculateSectionOffsets(elf)) {
-      fmt::print(cerr, "ERROR: calculateSectionOffsets failed.\n");
+      fmt::println(cerr, "ERROR: calculateSectionOffsets failed.");
       return -1;
    }
 
    if (!writeRpl(elf, dst)) {
-      fmt::print(cerr, "ERROR: writeRpl failed.\n");
+      fmt::println(cerr, "ERROR: writeRpl failed.");
       return -1;
    }
 
