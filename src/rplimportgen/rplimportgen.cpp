@@ -76,19 +76,19 @@ static void
 writeLinkerScript(std::ostream &out,
                   const std::string &name)
 {
-   fmt::print(out,
-              "SECTIONS\n"
-              "{{\n"
-              "   .fimport_{0} ALIGN(16) : {{\n"
-              "      KEEP ( *(.fimport_{0}) )\n"
-              "      *(.fimport_{0}.*)\n"
-              "   }} > loadmem\n"
-              "   .dimport_{0} ALIGN(16) : {{\n"
-              "      KEEP ( *(.dimport_{0}) )\n"
-              "      *(.dimport_{0}.*)\n"
-              "   }} > loadmem\n"
-              "}}\n",
-              name);
+   fmt::println(out,
+                "SECTIONS\n"
+                "{{\n"
+                "   .fimport_{0} ALIGN(16) : {{\n"
+                "      KEEP ( *(.fimport_{0}) )\n"
+                "      *(.fimport_{0}.*)\n"
+                "   }} > loadmem\n"
+                "   .dimport_{0} ALIGN(16) : {{\n"
+                "      KEEP ( *(.dimport_{0}) )\n"
+                "      *(.dimport_{0}.*)\n"
+                "   }} > loadmem\n"
+                "}}",
+                name);
 }
 
 static void

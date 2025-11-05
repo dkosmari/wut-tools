@@ -18,8 +18,6 @@
 
 using std::cerr;
 using std::cout;
-using std::endl;
-
 
 static void deinitializeFreeImage() {
    FreeImage_DeInitialise();
@@ -49,9 +47,9 @@ show_help(std::ostream& out,
           const excmd::parser& parser,
           const std::string& exec_name)
 {
-   fmt::print(out, "{} [options] <rpx-file> <output>\n", exec_name);
-   fmt::print(out, "{}\n", parser.format_help(exec_name));
-   fmt::print(out, "Report bugs to {}\n", PACKAGE_BUGREPORT);
+   fmt::println(out, "{} [options] <rpx-file> <output>", exec_name);
+   fmt::println(out, "{}", parser.format_help(exec_name));
+   fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char **argv) {
@@ -114,7 +112,7 @@ int main(int argc, char **argv) {
    }
 
    if (options.has("version")) {
-      fmt::print(cout, "{} ({}) {}\n", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
+      fmt::println(cout, "{} ({}) {}", argv[0], PACKAGE_NAME, PACKAGE_VERSION);
       return EXIT_SUCCESS;
    }
 

@@ -85,7 +85,7 @@ readElf(ElfFile &file, const std::string &filename)
 {
    std::ifstream in { filename, std::ifstream::binary };
    if (!in.is_open()) {
-      fmt::print(cerr, "Could not open {} for reading\n", filename);
+      fmt::println(cerr, "Could not open \"{}\" for reading.", filename);
       return false;
    }
 
@@ -93,35 +93,35 @@ readElf(ElfFile &file, const std::string &filename)
    in.read(reinterpret_cast<char *>(&file.header), sizeof(elf::Header));
 
    if (file.header.magic != elf::HeaderMagic) {
-      fmt::print(cerr, "Invalid ELF magic header {:08X}\n", elf::HeaderMagic);
+      fmt::println(cerr, "Invalid ELF magic header {:08X}", elf::HeaderMagic);
       return false;
    }
 
    if (file.header.fileClass != elf::ELFCLASS32) {
-      fmt::print(cerr, "Unexpected ELF file class {}, expected {}\n",
-                 file.header.fileClass,
-                 fmt::underlying(elf::ELFCLASS32));
+      fmt::println(cerr, "Unexpected ELF file class {}, expected {}.",
+                   file.header.fileClass,
+                   fmt::underlying(elf::ELFCLASS32));
       return false;
    }
 
    if (file.header.encoding != elf::ELFDATA2MSB) {
-      fmt::print(cerr, "Unexpected ELF encoding {}, expected {}\n",
-                 file.header.encoding,
-                 fmt::underlying(elf::ELFDATA2MSB));
+      fmt::println(cerr, "Unexpected ELF encoding {}, expected {}.",
+                   file.header.encoding,
+                   fmt::underlying(elf::ELFDATA2MSB));
       return false;
    }
 
    if (file.header.machine != elf::EM_PPC) {
-      fmt::print(cerr, "Unexpected ELF machine type {}, expected {}\n",
-                 file.header.machine,
-                 fmt::underlying(elf::EM_PPC));
+      fmt::println(cerr, "Unexpected ELF machine type {}, expected {}.",
+                   file.header.machine,
+                   fmt::underlying(elf::EM_PPC));
       return false;
    }
 
    if (file.header.elfVersion != elf::EV_CURRENT) {
-      fmt::print(cerr, "Unexpected ELF version {}, expected {}\n",
-                 file.header.elfVersion,
-                 fmt::underlying(elf::EV_CURRENT));
+      fmt::println(cerr, "Unexpected ELF version {}, expected {}.",
+                   file.header.elfVersion,
+                   fmt::underlying(elf::EV_CURRENT));
       return false;
    }
 
@@ -169,8 +169,7 @@ readElf(ElfFile &file, const std::string &filename)
 
       if (!name->compare(0, dwarf_prefix.size(), dwarf_prefix)) {
 #ifdef DEBUG
-         fmt::print(clog, "DEBUG: Ignoring {}\n",
-            section->name);
+         fmt::println(clog, "DEBUG: Ignoring {}", section->name);
 #endif //DEBUG
 
          section->header.type = elf::SHT_NULL;
@@ -187,7 +186,7 @@ readElf(ElfFile &file, const std::string &filename)
    }
 
 #ifdef DEBUG
-   fmt::print(clog, "DEBUG: In total, ignored {} sections\n",
+   fmt::println(clog, "DEBUG: In total, ignored {} sections",
       file.num_discarded_sections);
 #endif //DEBUG
 
@@ -411,7 +410,7 @@ fixRelocations(ElfFile &file)
          {
             elf::Symbol symbol;
             if (!getSymbol(*symbolSection, index, symbol)) {
-               fmt::print(cerr, "ERROR: Could not find symbol {} for fixing a R_PPC_REL32 relocation\n", index);
+               fmt::println(cerr, "ERROR: Could not find symbol {} for fixing a R_PPC_REL32 relocation", index);
                result = false;
             } else {
                newRelocations.emplace_back();
@@ -434,7 +433,7 @@ fixRelocations(ElfFile &file)
          default:
             // Only print error once per type
             if (!unsupportedTypes.count(type)) {
-               fmt::print(cerr, "ERROR: Unsupported relocation type {}\n", type);
+               fmt::println(cerr, "ERROR: Unsupported relocation type {}", type);
                unsupportedTypes.insert(type);
             }
          }
@@ -603,7 +602,7 @@ renameRplWrap(ElfFile &file)
                // both __rplwrap_<name> and <name> exist, we can just swap their
                // name pointers
 #ifdef DEBUG
-               fmt::print(clog, "DEBUG: renameRplWrap: {} <-> {}\n",
+               fmt::println(clog, "DEBUG: renameRplWrap: {} <-> {}",
                   wrapName, symName);
 #endif //DEBUG
                std::swap((*rplWrap)->name, symbols[i].name);
@@ -619,9 +618,9 @@ renameRplWrap(ElfFile &file)
 
       for (auto symbol : foundRplWraps) {
 #ifdef DEBUG
-         fmt::print(clog, "DEBUG: renameRplWrap: {} -> {}\n",
-            std::string(&strtabd[symbol->name]),
-            std::string(&strtabd[symbol->name] + rplwrap_prefix.length()));
+         fmt::println(clog, "DEBUG: renameRplWrap: {} -> {}",
+                      std::string{&strtabd[symbol->name]},
+                      std::string{&strtabd[symbol->name] + rplwrap_prefix.length()});
 #endif //DEBUG
          symbol->name += (uint32_t)rplwrap_prefix.length();
       }
@@ -848,7 +847,7 @@ calculateSectionOffsets(ElfFile &file)
       if (section->header.offset == 0 &&
           section->header.type != elf::SHT_NULL &&
           section->header.type != elf::SHT_NOBITS) {
-         fmt::print(cerr, "Failed to calculate offset for section {} ({})\n", section->name, section->index);
+         fmt::println(cerr, "Failed to calculate offset for section {} ({})", section->name, section->index);
          return false;
       }
 
@@ -881,7 +880,7 @@ writeRpl(ElfFile &file, const std::string &filename)
    std::ofstream out { filename, std::ofstream::binary };
 
    if (!out.is_open()) {
-      fmt::print(cerr, "Could not open {} for writing\n", filename);
+      fmt::println(cerr, "Could not open {} for writing", filename);
       return false;
    }
 

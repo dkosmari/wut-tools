@@ -62,7 +62,7 @@ writeExports(std::ofstream &out,
    for (const auto &name : exports) {
       fmt::println(out, ".extern {}", name);
    }
-   fmt::print(out, "\n");
+   fmt::println(out, "");
 
    // Write out header
    if (isData) {
@@ -83,14 +83,14 @@ writeExports(std::ofstream &out,
       fmt::println(out, ".long 0x{:x}", nameOffset);
       nameOffset += name.size() + 1;
    }
-   fmt::print(out, "\n");
+   fmt::println(out, "");
 
    // Write out the strings
    for (const auto &name : exports) {
       fmt::println(out, ".string \"{}\"", name);
       nameOffset += name.size() + 1;
    }
-   fmt::print(out, "\n");
+   fmt::println(out, "");
 }
 
 static void
