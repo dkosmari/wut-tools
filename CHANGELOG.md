@@ -2,10 +2,14 @@
 General:
 - Updated and simplified build scripts, using more autoconf-archive macros.
 - Updated C++ dialect to C++20.
-- Added "--version" option to all tools.
-- Error and log messages are sent to STDERR.
+- Added `--version` option to all tools.
+- Error and log messages are sent to `STDERR`.
 - Updated fmt library to 12.0.0.
-- Small code fixes to compile with "-Wall -Wextra".
+- Small code fixes to compile with `-Wall -Wextra`.
+
+readrpl:
+- Actually print the result of the integrity checks, to `STDERR`.
+- Ignore boundary check for synthetic symbol `_SDA_BASE_`.
 
 rplimportgen:
 - Generate aligned strings with ".ascii" and ".skip" directives.
@@ -13,12 +17,12 @@ rplimportgen:
 udplogserver:
 - Don't set socket to nonblock mode.
 - Added command line options.
-- Handle SIGINT to shut down cleanly with "Ctrl+C".
+- Handle `SIGINT` to shut down cleanly with "Ctrl+C".
 - Print out error messages.
-- Added "--verbose" option.
+- Added `--verbose` option.
 
 wuhbtool:
-- Fixed potential buffer overflow due to incorrect usage of strncpy,
+- Fixed potential buffer overflow due to incorrect usage of `strncpy`,
 - Show a warning when FreeImage dependency is missing, and avoid building wuhbtool.
 
 #### wut-tools 1.3.5

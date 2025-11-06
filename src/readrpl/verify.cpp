@@ -2,10 +2,13 @@
 #include <algorithm>
 #include <fmt/base.h>
 #include <iostream>
+#include <string_view>
 #include <unordered_set>
 #include <zlib.h>
 
 using std::cerr;
+
+using namespace std::literals;
 
 static bool
 sValidateRelocsAddTable(const Rpl &rpl,
@@ -140,8 +143,14 @@ sValidateSymbolTable(const Rpl &rpl,
 
                auto position = symbol->value - targetSection.header.addr;
                if (position > targetSectionSize || position + symbol->size > targetSectionSize) {
-                  fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00007);
-                  result = false;
+                  std::string_view symName{&symStrTabSection->data[symbol->name]};
+                  // Note: GCC sometimes generates the synthetic symbol _SDA_BASE_ outside
+                  // of .data, but this seems to be harmless.
+                  if (symName != "_SDA_BASE_"sv) {
+                     fmt::println(cerr, "*** Failed ELF file checks (err=0x{:08X})", 0xBAD00007);
+                     fmt::println(cerr, "***   section \"{}\", symbol \"{}\"", targetSection.name, symName);
+                     result = false;
+                  }
                }
             }
          } else if (type == elf::STT_FUNC) {
