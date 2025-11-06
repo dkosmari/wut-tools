@@ -12,7 +12,7 @@ readrpl:
 - Ignore boundary check for synthetic symbol `_SDA_BASE_`.
 
 rplimportgen:
-- Generate aligned strings with ".ascii" and ".skip" directives.
+- Generate aligned strings with `.ascii` and `.skip` directives.
 
 udplogserver:
 - Don't set socket to nonblock mode.
