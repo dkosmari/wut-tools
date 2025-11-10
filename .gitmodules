@@ -3,4 +3,4 @@
 	url = https://github.com/fmtlib/fmt.git
 [submodule "libraries/excmd"]
 	path = libraries/excmd
-	url = https://github.com/exjam/excmd.git
+	url = https://github.com/dkosmari/excmd.git
