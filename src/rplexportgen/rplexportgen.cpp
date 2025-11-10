@@ -98,7 +98,8 @@ show_help(std::ostream& out,
           const excmd::parser& parser,
           const std::string& exec_name)
 {
-   fmt::println(out, "{} [options] <exports.def> <output.S>", exec_name);
+   fmt::println(out, "Usage:");
+   fmt::println(out, "  {} [options] <input.def> <output.S>", exec_name);
    fmt::println(out, "{}", parser.format_help(exec_name));
    fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
