@@ -3,10 +3,10 @@
 
 AC_PREREQ(2.71)
 AC_INIT([WUT Tools],
-        [1.3.5],
-        [https://github.com/devkitPro/wut-tools/issues],
+        [1.3.5+],
+        [https://github.com/dkosmari/wut-tools/issues],
         [],
-        [https://github.com/devkitPro/wut-tools])
+        [https://github.com/dkosmari/wut-tools])
 AC_CONFIG_SRCDIR([src/elf2rpl/main.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
