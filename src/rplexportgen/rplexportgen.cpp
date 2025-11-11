@@ -99,7 +99,7 @@ show_help(std::ostream& out,
           const std::string& exec_name)
 {
    fmt::println(out, "Usage:");
-   fmt::println(out, "  {} [options] <input.def> <output.S>", exec_name);
+   fmt::println(out, "  {} [options] <input.def> <output.S>\n", exec_name);
    fmt::println(out, "{}", parser.format_help(exec_name));
    fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
@@ -121,10 +121,10 @@ int main(int argc, char **argv)
                      description { "Show version" });
 
       parser.default_command()
-         .add_argument("<exports.def>",
+         .add_argument("input.def",
                        description { "Path to input exports def file" },
                        value<std::string> {})
-         .add_argument("<output.S>",
+         .add_argument("output.S",
                        description { "Path to output assembly file" },
                        value<std::string> {});
 
@@ -145,23 +145,23 @@ int main(int argc, char **argv)
       return 0;
    }
 
-   if (!options.has("<exports.def>") || !options.has("<output.S>")) {
-      fmt::println(cerr, "Missing mandatory arguments: <exports.def> <output.S>");
+   if (!options.has("input.def") || !options.has("output.S")) {
+      fmt::println(cerr, "Missing mandatory arguments: <input.def> <output.S>\n");
       show_help(cerr, parser, argv[0]);
       return -1;
    }
 
    {
-      auto src = options.get<std::string>("<exports.def>");
-      std::ifstream in{src};
+      auto input_def = options.get<std::string>("input.def");
+      std::ifstream input{input_def};
 
-      if (!in.is_open()) {
-         fmt::println(cerr, "Could not open file \"{}\" for reading.", src);
+      if (!input.is_open()) {
+         fmt::println(cerr, "Could not open file \"{}\" for reading.", input_def);
          return -1;
       }
 
       std::string line;
-      while (getline(in, line)) {
+      while (getline(input, line)) {
          // Trim comments
          std::size_t commentOffset = line.find("//");
          if (commentOffset != std::string::npos) {
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
    std::sort(dataExports.begin(), dataExports.end());
 
    {
-      auto dst = options.get<std::string>("<output.S>");
+      auto dst = options.get<std::string>("output.S");
       std::ofstream out{dst};
 
       if (!out.is_open()) {

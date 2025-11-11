@@ -913,7 +913,7 @@ show_help(std::ostream& out,
           const std::string& exec_name)
 {
    fmt::println(out, "Usage:");
-   fmt::println(out, "  {} [options] <source.elf> <destination.rpl>", exec_name);
+   fmt::println(out, "  {} [options] <input.elf> <output.rpl>\n", exec_name);
    fmt::println(out, "{}", parser.format_help(exec_name));
    fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
@@ -935,11 +935,11 @@ int main(int argc, char **argv)
                      description { "Generate an RPL instead of an RPX" });
 
       parser.default_command()
-         .add_argument("src",
-                       description { "Path to input elf file" },
+         .add_argument("input.elf",
+                       description { "Path to input ELF file" },
                        value<std::string> {})
-         .add_argument("dst",
-                       description { "Path to output rpl file" },
+         .add_argument("output.rpl",
+                       description { "Path to output RPL/RPX file" },
                        value<std::string> {});
 
       options = parser.parse(argc, argv);
@@ -958,14 +958,14 @@ int main(int argc, char **argv)
       return 0;
    }
 
-   if (!options.has("src") || !options.has("dst")) {
-      fmt::println(cerr, "Missing mandatory arguments: src dst");
+   if (!options.has("input.elf") || !options.has("output.rpl")) {
+      fmt::println(cerr, "Missing mandatory arguments: <input.elf> <output.rpl>\n");
       show_help(cerr, parser, argv[0]);
       return -1;
    }
 
-   auto src = options.get<std::string>("src");
-   auto dst = options.get<std::string>("dst");
+   auto src = options.get<std::string>("input.elf");
+   auto dst = options.get<std::string>("output.rpl");
    auto isRpl = options.has("rpl");
 
    // Read elf into memory object!

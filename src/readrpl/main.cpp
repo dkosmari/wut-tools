@@ -118,7 +118,7 @@ show_help(std::ostream& out,
           const std::string& exec_name)
 {
    fmt::println(out, "Usage:");
-   fmt::println(out, "  {} [options] <file.rpl>", exec_name);
+   fmt::println(out, "  {} [options] <input.rpl>\n", exec_name);
    fmt::println(out, "{}", parser.format_help(exec_name));
    fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
                      value<std::string> {});
 
       parser.default_command()
-         .add_argument("path",
+         .add_argument("input.rpl",
                        description { "Path to RPL file" },
                        value<std::string> {});
 
@@ -180,28 +180,28 @@ int main(int argc, char **argv)
    }
 
    if (options.empty()) {
-      fmt::println(cerr, "No option provided.");
+      fmt::println(cerr, "No option provided.\n");
       show_help(cerr, parser, argv[0]);
       return ERROR_BAD_ARGUMENTS;
    }
 
-   if (!options.has("path")) {
-      fmt::println(cerr, "Error: path argument is mandatory.");
+   if (!options.has("input.rpl")) {
+      fmt::println(cerr, "Missing mandatory argument: <input.rpl>\n");
       show_help(cerr, parser, argv[0]);
       return ERROR_BAD_ARGUMENTS;
    }
 
    auto all = options.has("all");
 
-   auto dumpElfHeader = all || options.has("file-header");
-   auto dumpSectionSummary = all || options.has("sections");
-   auto dumpSectionRela = all || options.has("relocs");
-   auto dumpSectionSymtab = all || options.has("symbols");
-   auto dumpSectionRplExports = all || options.has("exports");
-   auto dumpSectionRplImports = all || options.has("imports");
-   auto dumpSectionRplCrcs = all || options.has("crc");
+   auto dumpElfHeader          = all || options.has("file-header");
+   auto dumpSectionSummary     = all || options.has("sections");
+   auto dumpSectionRela        = all || options.has("relocs");
+   auto dumpSectionSymtab      = all || options.has("symbols");
+   auto dumpSectionRplExports  = all || options.has("exports");
+   auto dumpSectionRplImports  = all || options.has("imports");
+   auto dumpSectionRplCrcs     = all || options.has("crc");
    auto dumpSectionRplFileinfo = all || options.has("file-info");
-   auto path = options.get<std::string>("path");
+   auto input_rpl = options.get<std::string>("input.rpl");
 
    // If no options are set (other than "path"), let's default to a summary
    if (options.set_options.size() == 1) {
@@ -211,17 +211,17 @@ int main(int argc, char **argv)
    }
 
    // Read file
-   std::ifstream fh { path, std::ifstream::binary };
+   std::ifstream fh { input_rpl, std::ifstream::binary };
    if (!fh.is_open()) {
-       fmt::println(cerr, "Could not open \"{}\" for reading", path);
+       fmt::println(cerr, "Could not open \"{}\" for reading", input_rpl);
       return ERROR_OPEN_INPUT;
    }
 
    Rpl rpl;
-   fh.read(reinterpret_cast<char*>(&rpl.header), sizeof(elf::Header));
+   fh.read(reinterpret_cast<char*>(&rpl.header), sizeof rpl.header);
 
    if (rpl.header.magic != elf::HeaderMagic) {
-      fmt::println(cerr, "Invalid ELF magic header");
+      fmt::println(cerr, "Invalid ELF magic header: {:08X}", rpl.header.magic.value());
       return ERROR_BAD_INPUT;
    }
 
@@ -332,7 +332,7 @@ int main(int argc, char **argv)
 
    if (options.has("exports-def")) {
       auto output = options.get<std::string>("exports-def");
-      if (!generateExportsDef(rpl, getFileBasename(path), output)) {
+      if (!generateExportsDef(rpl, getFileBasename(input_rpl), output)) {
          return ERROR_OPEN_OUTPUT;
       }
    }

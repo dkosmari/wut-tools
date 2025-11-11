@@ -97,7 +97,7 @@ show_help(std::ostream& out,
           const std::string& exec_name)
 {
    fmt::println(out, "Usage:");
-   fmt::println(out, "  {} [options] <input.def> <output.S> [<output.ld>]", exec_name);
+   fmt::println(out, "  {} [options] <input.def> <output.S> [<output.ld>]\n", exec_name);
    fmt::println(out, "{}", parser.format_help(exec_name));
    fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
@@ -122,13 +122,13 @@ main(int argc, char **argv)
          ;
 
       parser.default_command()
-         .add_argument("<exports.def>",
+         .add_argument("input.def",
                        description { "Path to input exports def file" },
                        value<std::string> {})
-         .add_argument("<output.S>",
+         .add_argument("output.S",
                        description { "Path to output assembly file" },
                        value<std::string> {})
-         .add_argument("<output.ld>",
+         .add_argument("output.ld",
                        description { "Path to output linker script" },
                        excmd::optional {},
                        value<std::string> {})
@@ -152,23 +152,23 @@ main(int argc, char **argv)
       return 0;
    }
 
-   if (!options.has("<exports.def>") || !options.has("<output.S>")) {
-      fmt::println(cerr, "Missing mandatory arguments: <exports.def> <output.S>");
+   if (!options.has("input.def") || !options.has("output.S")) {
+      fmt::println(cerr, "Missing mandatory arguments: <input.def> <output.S>\n");
       show_help(cerr, parser, argv[0]);
       return -1;
    }
 
    {
-      auto exports_def = options.get<std::string>("<exports.def>");
-      std::ifstream in{exports_def};
+      auto input_def = options.get<std::string>("input.def");
+      std::ifstream input{input_def};
 
-      if (!in.is_open()) {
-         fmt::println(cerr, "Could not open file \"{}\" for reading.", exports_def);
+      if (!input.is_open()) {
+         fmt::println(cerr, "Could not open file \"{}\" for reading.", input_def);
          return -1;
       }
 
       std::string line;
-      while (std::getline(in, line)) {
+      while (std::getline(input, line)) {
          // Trim comments
          std::size_t commentOffset = line.find("//");
          if (commentOffset != std::string::npos) {
@@ -211,39 +211,39 @@ main(int argc, char **argv)
          } else if (readMode == ReadMode::DATA_WRAP) {
             dataExports.push_back(std::string(RPLWRAP_PREFIX) + line);
          } else {
-            fmt::println(cerr, "Unexpected section data.");
+            fmt::println(cerr, "Unexpected section data: {:x}.", static_cast<unsigned>(readMode));
             return -1;
          }
       }
    }
 
    {
-      auto output_S = options.get<std::string>("<output.S>");
-      std::ofstream out{output_S};
+      auto output_S = options.get<std::string>("output.S");
+      std::ofstream output{output_S};
 
-      if (!out.is_open()) {
+      if (!output.is_open()) {
          fmt::println(cerr, "Could not open file \"{}\" for writing.", output_S);
          return -1;
       }
 
       if (funcExports.size() > 0) {
-         writeExports(out, moduleName, false, funcExports);
+         writeExports(output, moduleName, false, funcExports);
       }
 
       if (dataExports.size() > 0) {
-         writeExports(out, moduleName, true, dataExports);
+         writeExports(output, moduleName, true, dataExports);
       }
    }
 
-   if (options.has("<output.ld>")) {
-      auto output_ld = options.get<std::string>("<output.ld>");
-      std::ofstream out{output_ld};
+   if (options.has("output.ld")) {
+      auto output_ld = options.get<std::string>("output.ld");
+      std::ofstream output{output_ld};
 
-      if (!out.is_open()) {
+      if (!output.is_open()) {
          fmt::println(cerr, "Could not open file \"{}\" for writing.", output_ld);
          return -1;
       }
 
-      writeLinkerScript(out, moduleName);
+      writeLinkerScript(output, moduleName);
    }
 }

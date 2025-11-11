@@ -82,7 +82,7 @@ show_help(std::ostream& out,
           const std::string& exec_name)
 {
    fmt::println(out, "Usage:");
-   fmt::println(out, "  {} [options] [port]", exec_name);
+   fmt::println(out, "  {} [options] [port]\n", exec_name);
    fmt::println(out, "{}", parser.format_help(exec_name));
    fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }

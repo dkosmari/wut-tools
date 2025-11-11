@@ -48,7 +48,7 @@ show_help(std::ostream& out,
           const std::string& exec_name)
 {
    fmt::println(out, "Usage:");
-   fmt::println(out, "  {} [options] <file.rpx> <output.wuhb>", exec_name);
+   fmt::println(out, "  {} [options] <executable.rpx> <output.wuhb>\n", exec_name);
    fmt::println(out, "{}", parser.format_help(exec_name));
    fmt::println(out, "Report bugs to {}", PACKAGE_BUGREPORT);
 }
@@ -89,10 +89,10 @@ int main(int argc, char **argv) {
          ;
 
       parser.default_command()
-            .add_argument("rpx-file",
+            .add_argument("executable.rpx",
                        description{"Path to RPX file"},
                        value<std::string>{})
-            .add_argument("output",
+            .add_argument("output.wuhb",
                        description{"Path to WUHB file"},
                        value<std::string>{});
 
@@ -108,6 +108,7 @@ int main(int argc, char **argv) {
    }
 
    if (options.empty()) {
+      fmt::println(cerr, "Missing mandatory arguments: <executable.rpx> <output.wuhb>\n");
       show_help(cerr, parser, argv[0]);
       return EXIT_FAILURE;
    }
@@ -126,7 +127,7 @@ int main(int argc, char **argv) {
    auto codeFolder = new DirectoryEntry("code");
    auto metaFolder = new DirectoryEntry("meta");
 
-   std::string rpxFilePath = options.get<std::string>("rpx-file");
+   std::string rpxFilePath = options.get<std::string>("executable.rpx");
    auto rpxFile = OSFileEntry::fromPath(rpxFilePath.c_str(), "root.rpx");
    codeFolder->addChild(rpxFile);
 
@@ -202,7 +203,7 @@ int main(int argc, char **argv) {
       addFolderIfNotEmpty(root, contentFolder);
    }
 
-   std::string outputPath = options.get<std::string>("output");
+   std::string outputPath = options.get<std::string>("output.wuhb");
    romfs::CreateArchive(root, outputPath.c_str());
 
    delete root;
